@@ -26,6 +26,10 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(v -> {
+            Intent intentMakeNote = new Intent(this, MakeNoteActivity.class);
+            startActivity(intentMakeNote);
+        });
 
         RowItemAdapter rowsAdapter = new RowItemAdapter(getRows());
 
