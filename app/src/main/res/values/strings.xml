@@ -5,6 +5,7 @@
     <string name="title_activity_notes_list">FastNotes</string>
     <string name="title_activity_make_note">Новая запись</string>
     <string name="menu_add_text">Text</string>
-    <string name="menu_add_image">Image</string>
+    <string name="menu_add_photo">Photo</string>
+    <string name="menu_add_gallery">Gallery</string>
     <string name="menu_add_audio">Audio</string>
 </resources>

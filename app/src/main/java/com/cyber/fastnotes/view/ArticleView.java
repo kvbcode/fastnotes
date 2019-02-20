@@ -2,19 +2,15 @@ package com.cyber.fastnotes.view;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.text.util.Linkify;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import com.cyber.model.Article;
-
-import static com.cyber.model.Article.ItemType.*;
-import static com.cyber.model.Article.TextItem;
+import com.cyber.model.ArticleItem;
 
 public class ArticleView extends LinearLayout{
 
@@ -45,32 +41,33 @@ public class ArticleView extends LinearLayout{
     }
 
     public View getItemView(int index){
-        Article.Item item = article.get(index);
-
-        Log.v("CYBER", "getItemView: " + index);
+        ArticleItem item = article.get(index);
 
         switch(item.getType()){
-            case TEXT:
-                return getTextItemView((TextItem)item);
+            case ArticleItem.TYPE_TEXT:
+                return getTextItemView((ArticleItem.Text)item);
+            case ArticleItem.TYPE_IMAGE:
+                return getImageItemView((ArticleItem.Image)item);
         }
 
-        return getTextItemView((TextItem)item);
+        return getTextItemView((ArticleItem.Text)item);
     }
 
-    private View getTextItemView(TextItem item) {
-        TextView text = new TextView(this.getContext());
-        text.setText(item.getText());
+    private View getTextItemView(ArticleItem.Text item) {
+        EditText editText = new EditText(this.getContext());
+        editText.setText(item.getData());
 
-        Linkify.addLinks(text,
-            Linkify.EMAIL_ADDRESSES |
-            Linkify.PHONE_NUMBERS |
-            Linkify.WEB_URLS
-        );
+        editText.setOnFocusChangeListener((view, hasFocus) -> item.setData(((EditText)view).getText().toString()));
 
-        return text;
+        return editText;
     }
 
+    private View getImageItemView(ArticleItem.Image item) {
+        ImageView img = new ImageView(this.getContext());
+        img.setImageBitmap(item.getData());
 
+        return img;
+    }
 
 
 }

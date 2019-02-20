@@ -1,52 +1,61 @@
 package com.cyber.model;
 
-import android.view.View;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
+import android.graphics.Bitmap;
+
+import com.cyber.fastnotes.service.SharedTypeConverter;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class Article{
+@Entity
+public class Article implements RowItem{
 
-    public enum ItemType{
-        TEXT, IMAGE, AUDIO
-    }
+    @PrimaryKey(autoGenerate = true)
+    public long id;
 
-    public static abstract class Item{
-        ItemType type;
-        String text;
+    public String title;
 
-        public ItemType getType() {
-            return type;
-        }
+    public Date date;
 
-        public String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-    }
-
-    public static class TextItem extends Item{
-        public TextItem(String text) {
-            this.type = ItemType.TEXT;
-            this.text = text;
-        }
-    }
-
-
-    private final List<Item> items;
+    @Ignore
+    List<ArticleItem> items;
 
     public Article(){
+        title = "";
+        date = new Date();
         items = new ArrayList<>();
     }
 
-    public void add(Item item){
-        items.add(item);
+    @Ignore
+    public Article(String title){
+        super();
+        this.title = title;
     }
 
-    public Item get(int index){
+    public ArticleItem add(ArticleItem item){
+        item.articleId = id;
+        items.add(item);
+        return item;
+    }
+
+    public ArticleItem.Text add(String text){
+        ArticleItem.Text item = new ArticleItem.Text(text);
+        add(item);
+        return item;
+    }
+
+    public ArticleItem.Image add(Bitmap bitmap){
+        ArticleItem.Image item = new ArticleItem.Image(bitmap);
+        add(item);
+        return item;
+    }
+
+    public ArticleItem get(int index){
         return items.get(index);
     }
 
@@ -58,4 +67,26 @@ public class Article{
         return items.size();
     }
 
+    public List<ArticleItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<ArticleItem> items) {
+        this.items = items;
+    }
+
+    @Override
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public Date getDate() {
+        return date;
+    }
 }

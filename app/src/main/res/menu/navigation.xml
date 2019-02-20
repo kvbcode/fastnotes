@@ -8,10 +8,14 @@
         android:title="@string/menu_add_text" />
 
     <item
-        android:id="@+id/menuAddImage"
+        android:id="@+id/menuAddPhoto"
         android:icon="@android:drawable/ic_menu_camera"
-        android:title="@string/menu_add_image" />
+        android:title="@string/menu_add_photo" />
 
+    <item
+        android:id="@+id/menuAddGallery"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="@string/menu_add_gallery" />
     <item
         android:id="@+id/menuAddAudio"
         android:icon="@android:drawable/ic_btn_speak_now"

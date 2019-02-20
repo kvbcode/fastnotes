@@ -6,29 +6,43 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.cyber.fastnotes.R;
 import com.cyber.model.RowItem;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemViewHolder>{
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm dd/MM/yyyy");
 
-    private List<RowItem> messageRowItemList = Collections.emptyList();
+    private final List<RowItem> rowItemList = new ArrayList<>();
 
     public RowItemAdapter(){}
 
-    public RowItemAdapter(List<RowItem> messageRowItemList) {
-        this.messageRowItemList = messageRowItemList;
+    public RowItemAdapter(Collection<RowItem> items) {
+        this.rowItemList.addAll(items);
     }
 
-    public void setRowItemList(List<RowItem> messageRowItemList){
-        this.messageRowItemList = messageRowItemList;
+    public void setRowItemList(Collection<RowItem> items){
+        rowItemList.clear();
+        rowItemList.addAll(items);
+    }
+
+    public void add(RowItem rowItem){
+        rowItemList.add(rowItem);
+    }
+
+    public RowItem get(int index){
+        return rowItemList.get(index);
+    }
+
+    public void clear(){
+        rowItemList.clear();
     }
 
     static class RowItemViewHolder extends RecyclerView.ViewHolder{
@@ -65,11 +79,11 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
 
     @Override
     public void onBindViewHolder(@NonNull RowItemViewHolder holder, int position) {
-        holder.bindItem( messageRowItemList.get(position), null );
+        holder.bindItem( rowItemList.get(position), null );
     }
 
     @Override
     public int getItemCount() {
-        return messageRowItemList.size();
+        return rowItemList.size();
     }
 }
