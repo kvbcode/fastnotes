@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.service.AppDataBase;
+import com.cyber.model.Article;
 
 import io.reactivex.schedulers.Schedulers;
 
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(v -> doArticleEdit(App.NO_VALUE) );
+        fab.setOnClickListener(v -> doArticleEdit(Article.NO_ID) );
 
         rowsAdapter = new RowItemAdapter();
 
@@ -75,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode==RESULT_CANCELED) return;
 
         if (requestCode==REQUEST_ARTICLE) {
-            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + data.getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE));
-            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE);
+            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + data.getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID));
+            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID);
             doUpdateRowById(articleId);
         }
 

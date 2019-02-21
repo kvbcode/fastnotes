@@ -31,7 +31,7 @@ public abstract class ArticleDao {
     @Query("SELECT * FROM article WHERE id = :id")
     public abstract Maybe<Article> getById(long id);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     public abstract long insert(Article article);
 
     @Update
@@ -42,18 +42,22 @@ public abstract class ArticleDao {
 
     @Transaction
     public long saveFully(Article article){
-        long id = insert(article);
-        long itemId;
 
+        long articleId = article.getId();
+        if (article.isNew()) articleId = insert(article);
+
+        long itemId;
         ArticleItemDao articleItemDao = DB.articleItemDao();
 
         for (ArticleItem item:article.getItems()) {
-            item.setArticleId(id);
-            itemId = articleItemDao.insert(item);
-            Log.v(App.TAG, "saved changed article item: id: " + itemId);
+            if (item.isChanged()) {
+                item.setArticleId(articleId);
+                itemId = articleItemDao.insert(item);
+                Log.v(App.TAG, "saved changed article item: id: " + itemId);
+            }
         }
 
-        return id;
+        return articleId;
     }
 
 

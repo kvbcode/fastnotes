@@ -7,7 +7,6 @@ import com.cyber.fastnotes.service.AppDataBase;
 
 public class App extends Application {
 
-    public static final long NO_VALUE = Long.MIN_VALUE;
     public static final String EXTRA_ID_NAME = "id";
     public static final String TAG = "FASTNOTES";
 

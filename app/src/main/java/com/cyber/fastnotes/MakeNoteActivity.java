@@ -1,8 +1,6 @@
 package com.cyber.fastnotes;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -15,7 +13,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ScrollView;
-import android.widget.Toast;
 
 import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.fastnotes.service.IOHelper;
@@ -24,7 +21,6 @@ import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 
 import java.io.File;
-import java.io.IOException;
 
 import io.reactivex.Maybe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -94,7 +90,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
 
-        long articleId = getIntent().getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE);
+        long articleId = getIntent().getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID);
         obsLoadArticle(articleId)
             .subscribeOn(Schedulers.io())
             .defaultIfEmpty(new Article())
@@ -147,18 +143,6 @@ public class MakeNoteActivity extends AppCompatActivity {
         startActivityForResult(intent, GALLERY_IMAGE_REQUEST);
     }
 
-    public Bitmap resizeBitmap(Bitmap bitmap){
-        Point screenSize = new Point();
-        getWindowManager().getDefaultDisplay().getSize(screenSize);
-
-        float ar = (float)bitmap.getWidth() / bitmap.getHeight();
-
-        int width = Math.min( screenSize.x, screenSize.y );
-        int height = Math.round(width / ar);
-
-        return Bitmap.createScaledBitmap(bitmap, width, height, true);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_CANCELED) return;
@@ -166,38 +150,16 @@ public class MakeNoteActivity extends AppCompatActivity {
         if (requestCode == PHOTO_REQUEST){
             Log.d(App.TAG, "success PHOTO_REQUEST, image Uri: " + lastOutputFileUri);
 
-            try {
-                Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), lastOutputFileUri);
-                Bitmap thumb = resizeBitmap(image);
-                image.recycle();
-
-                ArticleItem item = ArticleItem.fromBitmap(lastOutputFileUri);
-                item.setPayload(thumb);
-                article.add(item);
-            }catch(IOException e){
-                Log.e(App.TAG, "Failed reading from camera: " + e.getMessage());
-                Toast.makeText(this, "Failed reading from camera", Toast.LENGTH_LONG);
-            }
-
+            ArticleItem item = ArticleItem.fromBitmap(lastOutputFileUri);
+            article.add(item);
         }
 
         if (requestCode == GALLERY_IMAGE_REQUEST){
             Uri contentURI = data.getData();
             Log.d(App.TAG, "success GALLERY_IMAGE_REQUEST, image Uri: " + contentURI);
 
-            try {
-                Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                Bitmap thumb = resizeBitmap(image);
-                image.recycle();
-
-                ArticleItem item = ArticleItem.fromBitmap(contentURI);
-                item.setPayload(thumb);
-                article.add(item);
-            }catch(IOException e){
-                Log.e(App.TAG, "Failed file reading from gallery: " + e.getMessage());
-                Toast.makeText(this, "Failed file reading from gallery", Toast.LENGTH_LONG);
-            }
-
+            ArticleItem item = ArticleItem.fromBitmap(contentURI);
+            article.add(item);
         }
 
         articleView.notifyItemInserted();

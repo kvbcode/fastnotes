@@ -5,7 +5,9 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.graphics.Bitmap;
+import android.util.Log;
 
+import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.service.SharedTypeConverter;
 
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @Entity
 public class Article implements RowItem{
+    public static final long NO_ID = Long.MIN_VALUE;
 
     @PrimaryKey(autoGenerate = true)
     public long id;
@@ -26,15 +29,14 @@ public class Article implements RowItem{
     List<ArticleItem> items;
 
     public Article(){
+        id = NO_ID;
         title = "";
         date = new Date();
         items = new ArrayList<>();
     }
 
-    @Ignore
-    public Article(String title){
-        super();
-        this.title = title;
+    public boolean isNew(){
+        return id==NO_ID;
     }
 
     public ArticleItem add(ArticleItem item){

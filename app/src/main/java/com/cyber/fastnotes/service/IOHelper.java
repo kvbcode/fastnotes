@@ -11,7 +11,7 @@ import com.cyber.fastnotes.App;
 
 import java.io.IOException;
 
-public class IOHelper {
+public abstract class IOHelper {
 
     public static final int IMAGE_ERROR = android.R.drawable.ic_menu_report_image;
 
