@@ -20,12 +20,12 @@ public class ArticleItem{
     public static final int TYPE_AUDIO = 103;
 
     @PrimaryKey(autoGenerate = true)
-    public long id;
+    public Long id;
 
     public int type;
 
     @ColumnInfo(name = "article_id", index = true)
-    public long articleId;
+    public Long articleId;
 
     public String text;
 
@@ -58,11 +58,11 @@ public class ArticleItem{
         return item;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -78,7 +78,7 @@ public class ArticleItem{
         return articleId;
     }
 
-    public void setArticleId(long articleId) {
+    public void setArticleId(Long articleId) {
         this.articleId = articleId;
     }
 

@@ -13,6 +13,7 @@ import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.model.Article;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(v -> doArticleEdit(Article.NO_ID) );
+        fab.setOnClickListener(v -> doArticleEdit(0, true) );
 
         rowsAdapter = new RowItemAdapter();
 
@@ -41,19 +42,25 @@ public class MainActivity extends AppCompatActivity {
         rv.setLayoutManager(new LinearLayoutManager( this ));
         rv.setAdapter(rowsAdapter);
 
-        rowsAdapter.setOnItemPositionClickListener((v,i) -> doArticleEdit( rowsAdapter.get(i).getId() ));
+        rowsAdapter.setOnItemPositionClickListener((v,i) -> doArticleEdit( rowsAdapter.get(i).getId(), false ));
 
         doUpdateAllRows();
     }
 
     protected void doUpdateAllRows(){
+        Log.v(App.TAG, "doUpdateAllRows()");
         DB.articleDao().getAll()
             .subscribeOn(Schedulers.io())
-            .subscribe( rowsList -> rowsAdapter.setRowItemList(rowsList));
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( rowsList -> {
+                rowsAdapter.setRowItemList(rowsList);
+                rowsAdapter.notifyDataSetChanged();
+            });
     }
 
     protected void doUpdateRowById(long articleId){
         int pos = rowsAdapter.getIndexById(articleId);
+        Log.v(App.TAG, "doUpdateRowById: " + articleId + ", pos: " + pos);
         if (pos>=0){
             rowsAdapter.notifyItemChanged(pos);
         }else{
@@ -61,11 +68,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void doArticleEdit(long articleId){
-        Log.v(App.TAG, "doArticleEdit(), id: " + articleId);
-
+    protected void doArticleEdit(long articleId, boolean isNew){
         Intent intent = new Intent(this, MakeNoteActivity.class);
-        intent.putExtra(App.EXTRA_ID_NAME, articleId);
+
+        intent.putExtra(App.EXTRA_IS_NEW_NAME, isNew);
+
+        if (!isNew) intent.putExtra(App.EXTRA_ID_NAME, articleId);
 
         startActivityForResult(intent, REQUEST_ARTICLE);
     }
@@ -76,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode==RESULT_CANCELED) return;
 
         if (requestCode==REQUEST_ARTICLE) {
-            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + data.getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID));
-            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID);
+            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, Long.MIN_VALUE);
+            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + articleId);
             doUpdateRowById(articleId);
         }
 

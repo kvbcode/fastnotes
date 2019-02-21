@@ -4,7 +4,7 @@ import java.util.Date;
 
 public interface RowItem {
 
-    long getId();
+    Long getId();
 
     String getTitle();
 

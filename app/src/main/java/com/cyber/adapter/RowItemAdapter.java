@@ -44,10 +44,10 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
         return rowItemList.get(index);
     }
 
-    public int getIndexById(long id){
+    public int getIndexById(Long id){
         for(int i=0; i<getItemCount(); i++){
             RowItem item = get(i);
-            if (id == item.getId()) return i;
+            if (id.equals(item.getId())) return i;
         }
         return -1;
     }

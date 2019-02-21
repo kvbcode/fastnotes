@@ -16,10 +16,8 @@ import java.util.List;
 
 @Entity
 public class Article implements RowItem{
-    public static final long NO_ID = Long.MIN_VALUE;
-
     @PrimaryKey(autoGenerate = true)
-    public long id;
+    public Long id;
 
     public String title;
 
@@ -29,18 +27,13 @@ public class Article implements RowItem{
     List<ArticleItem> items;
 
     public Article(){
-        id = NO_ID;
         title = "";
         date = new Date();
         items = new ArrayList<>();
     }
 
-    public boolean isNew(){
-        return id==NO_ID;
-    }
-
     public ArticleItem add(ArticleItem item){
-        item.articleId = id;
+        item.setArticleId( getId() );
         items.add(item);
         return item;
     }
@@ -66,8 +59,12 @@ public class Article implements RowItem{
     }
 
     @Override
-    public long getId() {
+    public Long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     @Override
@@ -82,5 +79,9 @@ public class Article implements RowItem{
     @Override
     public Date getDate() {
         return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 }

@@ -90,18 +90,29 @@ public class MakeNoteActivity extends AppCompatActivity {
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
 
-        long articleId = getIntent().getLongExtra(App.EXTRA_ID_NAME, Article.NO_ID);
-        obsLoadArticle(articleId)
-            .subscribeOn(Schedulers.io())
-            .defaultIfEmpty(new Article())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe( ar -> {
-                article = ar;
-                articleView.setArticle(article);
-                editTitle.setText(article.getTitle());
-                editTitle.requestFocus();
-            });
+        parseInputParams(getIntent());
+    }
 
+    protected void parseInputParams(Intent in){
+        boolean isNew = in.getBooleanExtra(App.EXTRA_IS_NEW_NAME, true);
+
+        if (isNew) {
+            Log.v(App.TAG, "create new Article");
+            setArticle(new Article());
+        }else {
+            final long articleId = in.getLongExtra(App.EXTRA_ID_NAME, Long.MIN_VALUE);
+            obsLoadArticle(articleId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(ar -> setArticle(ar));
+        }
+    }
+
+    protected void setArticle(Article article){
+        this.article = article;
+        articleView.setArticle(article);
+        editTitle.setText(article.getTitle());
+        editTitle.requestFocus();
     }
 
     @Override
@@ -124,7 +135,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void takePhoto(){
+    protected void takePhoto(){
         String fname = IOHelper.createFilename("img_", "jpg");
 
         File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fname);
@@ -137,7 +148,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         startActivityForResult(intent, PHOTO_REQUEST);
     }
 
-    public void getGalleryImage(){
+    protected void getGalleryImage(){
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
         intent.setType("image/*");
         startActivityForResult(intent, GALLERY_IMAGE_REQUEST);
@@ -166,7 +177,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
 
-    public Maybe<Long> obsSaveArticle(){
+    protected Maybe<Long> obsSaveArticle(){
         editTitle.requestFocus();
         article.setTitle(editTitle.getText().toString());
 
@@ -177,7 +188,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         ;
     }
 
-    public Maybe<Article> obsLoadArticle(long articleId){
+    protected Maybe<Article> obsLoadArticle(long articleId){
         return db.articleDao().loadFully(articleId)
             .doOnSuccess( ar -> Log.v(App.TAG, "load Article id: " + ar.getId()))
             .doOnError( e ->  Log.e(App.TAG, "obsLoadArticle() error: " + e.getMessage()) )

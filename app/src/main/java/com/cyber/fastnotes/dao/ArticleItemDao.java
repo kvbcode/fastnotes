@@ -29,6 +29,9 @@ public interface ArticleItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(ArticleItem item);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ArticleItem> itemsList);
+
     @Update
     int update(ArticleItem item);
 

@@ -43,21 +43,20 @@ public abstract class ArticleDao {
     @Transaction
     public long saveFully(Article article){
 
-        Log.v(App.TAG, "saveSully article id: " + article.getId());
+        Log.v(App.TAG, "saveFully article id: " + article.getId());
 
-        long articleId = article.getId();
-        if (article.isNew()) articleId = insert(article);
-
-        long itemId;
-        ArticleItemDao articleItemDao = DB.articleItemDao();
-
-        for (ArticleItem item:article.getItems()) {
-            if (item.isChanged()) {
-                item.setArticleId(articleId);
-                itemId = articleItemDao.insert(item);
-                Log.v(App.TAG, "saved changed article item: id: " + itemId);
-            }
+        final long articleId;
+        if (article.getId()==null){
+            articleId = insert(article);
+        }else{
+            articleId = update(article);
         }
+
+        Observable.fromIterable(article.getItems())
+            .filter(ArticleItem::isChanged)
+            .doOnNext(item -> item.setArticleId(articleId))
+            .toList()
+            .subscribe( itemList -> DB.articleItemDao().insertAll(itemList));
 
         return articleId;
     }
@@ -65,13 +64,12 @@ public abstract class ArticleDao {
 
     public Maybe<Article> loadFully(long id){
         return Maybe.defer( () -> getById(id) )
-            .doOnEvent((ar, e) -> Log.v(App.TAG, "loadFully.map: " + ar))
             .zipWith( DB.articleItemDao().getByArticleId( id ), (ar, items) -> {
                 ar.setItems(items);
                 return ar;
             })
             .doOnEvent((ar, e) -> {
-                if (ar!=null) Log.v(App.TAG, "loadFully.map with items: " + ar.size());
+                if (ar!=null) Log.v(App.TAG, "loadFully article id: " + id + " with items: " + ar.size());
             })
         ;
     }
