@@ -14,7 +14,6 @@ import com.cyber.model.RowItem;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemViewHolder>{
@@ -22,13 +21,17 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
 
     private final List<RowItem> rowItemList = new ArrayList<>();
 
+    OnItemPositionClickListener onItemClickListener = null;
+    OnItemPositionClickListener onItemLongClickListener = null;
+
+
     public RowItemAdapter(){}
 
-    public RowItemAdapter(Collection<RowItem> items) {
+    public RowItemAdapter(Collection<? extends RowItem> items) {
         this.rowItemList.addAll(items);
     }
 
-    public void setRowItemList(Collection<RowItem> items){
+    public void setRowItemList(Collection<? extends RowItem> items){
         rowItemList.clear();
         rowItemList.addAll(items);
     }
@@ -39,6 +42,14 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
 
     public RowItem get(int index){
         return rowItemList.get(index);
+    }
+
+    public int getIndexById(long id){
+        for(int i=0; i<getItemCount(); i++){
+            RowItem item = get(i);
+            if (id == item.getId()) return i;
+        }
+        return -1;
     }
 
     public void clear(){
@@ -61,11 +72,11 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
             cardView = container.findViewById(R.id.messageRowItemCardView);
         }
 
-        void bindItem(RowItem item, View.OnClickListener clickListener){
+        View bindItem(RowItem item){
             txtTitle.setText( item.getTitle() );
             txtDateTime.setText( dateFormat.format(item.getDate()) );
 
-            if (clickListener!=null) cardView.setOnClickListener( clickListener );
+            return cardView;
         }
     }
 
@@ -79,11 +90,23 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
 
     @Override
     public void onBindViewHolder(@NonNull RowItemViewHolder holder, int position) {
-        holder.bindItem( rowItemList.get(position), null );
+        View view = holder.bindItem( get(position) );
+
+        if (onItemClickListener !=null) view.setOnClickListener( v -> onItemClickListener.onItemClick(v, position));
+        if (onItemLongClickListener !=null) view.setOnClickListener( v  -> onItemLongClickListener.onItemClick(v, position));
     }
 
     @Override
     public int getItemCount() {
         return rowItemList.size();
     }
+
+    public void setOnItemPositionClickListener(OnItemPositionClickListener clickListener){
+        this.onItemClickListener = clickListener;
+    }
+
+    public void setOnItemPositionLongClickListener(OnItemPositionClickListener longClickListener){
+        this.onItemLongClickListener = longClickListener;
+    }
+
 }

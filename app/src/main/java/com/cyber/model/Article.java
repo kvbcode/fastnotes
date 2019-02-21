@@ -43,18 +43,6 @@ public class Article implements RowItem{
         return item;
     }
 
-    public ArticleItem.Text add(String text){
-        ArticleItem.Text item = new ArticleItem.Text(text);
-        add(item);
-        return item;
-    }
-
-    public ArticleItem.Image add(Bitmap bitmap){
-        ArticleItem.Image item = new ArticleItem.Image(bitmap);
-        add(item);
-        return item;
-    }
-
     public ArticleItem get(int index){
         return items.get(index);
     }
@@ -72,7 +60,7 @@ public class Article implements RowItem{
     }
 
     public void setItems(List<ArticleItem> items) {
-        this.items = items;
+        if (items!=null) this.items = items;
     }
 
     @Override
@@ -83,6 +71,10 @@ public class Article implements RowItem{
     @Override
     public String getTitle() {
         return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override

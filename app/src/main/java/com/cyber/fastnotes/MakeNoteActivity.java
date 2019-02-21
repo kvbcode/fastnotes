@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -12,17 +13,21 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
-import com.cyber.fastnotes.service.DataStorage;
+import com.cyber.fastnotes.service.AppDataBase;
+import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.view.ArticleView;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 
+import java.io.File;
 import java.io.IOException;
 
-import io.reactivex.Single;
+import io.reactivex.Maybe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 
@@ -31,11 +36,14 @@ public class MakeNoteActivity extends AppCompatActivity {
     private static int GALLERY_IMAGE_REQUEST = 1102;
     private static int AUDIO_REQUEST = 1103;
 
-    private static String TAG = "CYBER";
-
     private Article article;
+    private AppDataBase db;
+    private Uri lastOutputFileUri;
+
+    private EditText editTitle;
     private ArticleView articleView;
     private ScrollView scrollView;
+
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -44,8 +52,8 @@ public class MakeNoteActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.menuAddText:
-                    article.add("TEXT ITEM");
-                    articleView.notifyDatasetChanged();
+                    article.add(ArticleItem.fromText(""));
+                    articleView.notifyItemInserted();
                     scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
                     return true;
                 case R.id.menuAddPhoto:
@@ -55,8 +63,8 @@ public class MakeNoteActivity extends AppCompatActivity {
                     getGalleryImage();
                     return true;
                 case R.id.menuAddAudio:
-                    article.add("AUDIO ITEM");
-                    articleView.notifyDatasetChanged();
+                    article.add(ArticleItem.fromText("new AUDIO ITEM (TEXT)"));
+                    articleView.notifyItemInserted();
                     scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
                     return true;
             }
@@ -69,11 +77,15 @@ public class MakeNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_note);
 
-        scrollView = findViewById(R.id.scrollView);
+        db = App.getInstance().getDataBase();
 
-        article = new Article();
+        editTitle = findViewById(R.id.editTitle);
+        editTitle.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus && article!=null) article.setTitle( editTitle.getText().toString() );
+        });
+
+        scrollView = findViewById(R.id.scrollView);
         articleView = findViewById(R.id.articleView);
-        articleView.setArticle(article);
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -81,6 +93,19 @@ public class MakeNoteActivity extends AppCompatActivity {
         ActionBar bar = getSupportActionBar();
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
+
+        long articleId = getIntent().getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE);
+        obsLoadArticle(articleId)
+            .subscribeOn(Schedulers.io())
+            .defaultIfEmpty(new Article())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( ar -> {
+                article = ar;
+                articleView.setArticle(article);
+                editTitle.setText(article.getTitle());
+                editTitle.requestFocus();
+            });
+
     }
 
     @Override
@@ -88,10 +113,15 @@ public class MakeNoteActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if(id == android.R.id.home){
-            doSaveArticle();
-            Intent data = new Intent();
-            setResult(RESULT_OK, data);
-            finish();
+            obsSaveArticle()
+                .subscribeOn(Schedulers.io())
+                .doFinally(() -> finish())
+                .subscribe( articleId -> {
+                    Intent data = new Intent();
+                    data.putExtra(App.EXTRA_ID_NAME, articleId);
+                    setResult(RESULT_OK, data);
+                });
+
             return true;
         }
 
@@ -99,8 +129,16 @@ public class MakeNoteActivity extends AppCompatActivity {
     }
 
     public void takePhoto(){
-        Intent intentGetPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intentGetPhoto, PHOTO_REQUEST);
+        String fname = IOHelper.createFilename("img_", "jpg");
+
+        File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fname);
+        lastOutputFileUri = Uri.fromFile(file);
+
+        Log.v(App.TAG, "takePhoto() into: " + lastOutputFileUri);
+
+        Intent intent = new Intent( android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, lastOutputFileUri);
+        startActivityForResult(intent, PHOTO_REQUEST);
     }
 
     public void getGalleryImage(){
@@ -126,44 +164,62 @@ public class MakeNoteActivity extends AppCompatActivity {
         if (resultCode == RESULT_CANCELED) return;
 
         if (requestCode == PHOTO_REQUEST){
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            Bitmap thumb = resizeBitmap(photo);
-            Uri contenUri = DataStorage.getInstance().saveBitmap(this, photo);
-            photo.recycle();
+            Log.d(App.TAG, "success PHOTO_REQUEST, image Uri: " + lastOutputFileUri);
 
-            Log.v(TAG, "photo saved: " + contenUri);
+            try {
+                Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), lastOutputFileUri);
+                Bitmap thumb = resizeBitmap(image);
+                image.recycle();
 
-            ArticleItem.Image item = article.add( thumb );
-            item.setContentUri(contenUri);
+                ArticleItem item = ArticleItem.fromBitmap(lastOutputFileUri);
+                item.setPayload(thumb);
+                article.add(item);
+            }catch(IOException e){
+                Log.e(App.TAG, "Failed reading from camera: " + e.getMessage());
+                Toast.makeText(this, "Failed reading from camera", Toast.LENGTH_LONG);
+            }
+
         }
 
         if (requestCode == GALLERY_IMAGE_REQUEST){
             Uri contentURI = data.getData();
-            Log.v(TAG, "success GALLERY_IMAGE_REQUEST, image Uri: " + contentURI);
+            Log.d(App.TAG, "success GALLERY_IMAGE_REQUEST, image Uri: " + contentURI);
 
             try {
                 Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
                 Bitmap thumb = resizeBitmap(image);
                 image.recycle();
 
-                ArticleItem.Image item = article.add(thumb);
-                item.setContentUri(contentURI);
+                ArticleItem item = ArticleItem.fromBitmap(contentURI);
+                item.setPayload(thumb);
+                article.add(item);
             }catch(IOException e){
+                Log.e(App.TAG, "Failed file reading from gallery: " + e.getMessage());
                 Toast.makeText(this, "Failed file reading from gallery", Toast.LENGTH_LONG);
             }
 
         }
 
-        articleView.notifyDatasetChanged();
+        articleView.notifyItemInserted();
         scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
 
-    public void doSaveArticle(){
-        Single.fromCallable(() -> App.getInstance().getDataBase().articleDao().saveFully(article))
+    public Maybe<Long> obsSaveArticle(){
+        editTitle.requestFocus();
+        article.setTitle(editTitle.getText().toString());
+
+        return Maybe.fromCallable(() -> db.articleDao().saveFully(article))
             .subscribeOn(Schedulers.io())
-            .subscribe(
-                id -> Log.v("TAG", "new Article id: " + id),
-                e ->  Log.e("TAG", "saveWork() error: " + e.getMessage()) );
+            .doOnSuccess( id -> Log.v(App.TAG, "saved Article id: " + id))
+            .doOnError( e ->  Log.e(App.TAG, "obsSaveArticle() error: " + e.getMessage()) )
+        ;
+    }
+
+    public Maybe<Article> obsLoadArticle(long articleId){
+        return db.articleDao().loadFully(articleId)
+            .doOnSuccess( ar -> Log.v(App.TAG, "load Article id: " + ar.getId()))
+            .doOnError( e ->  Log.e(App.TAG, "obsLoadArticle() error: " + e.getMessage()) )
+        ;
     }
 
 }

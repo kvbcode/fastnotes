@@ -8,4 +8,6 @@
     <string name="menu_add_photo">Photo</string>
     <string name="menu_add_gallery">Gallery</string>
     <string name="menu_add_audio">Audio</string>
+    <string name="hint_edit_title">Задайте заголовок</string>
+    <string name="hint_edit_text">введите текст</string>
 </resources>

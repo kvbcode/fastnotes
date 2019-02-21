@@ -5,11 +5,8 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
-import android.arch.persistence.room.TypeConverters;
 import android.graphics.Bitmap;
 import android.net.Uri;
-
-import com.cyber.fastnotes.service.SharedTypeConverter;
 
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
@@ -30,15 +27,35 @@ public class ArticleItem{
     @ColumnInfo(name = "article_id", index = true)
     public long articleId;
 
+    public String text;
+
     @Ignore
-    Object data;
+    Object payload;
+
+    @Ignore
+    boolean changed;
 
     public Uri contentUri;
 
     public ArticleItem() {
         this.type = TYPE_NONE;
-        this.data = null;
+        this.payload = null;
         this.contentUri = null;
+        this.changed = false;
+    }
+
+    public static ArticleItem fromText(String text){
+        ArticleItem item = new ArticleItem();
+        item.setType(ArticleItem.TYPE_TEXT);
+        item.setText(text);
+        return item;
+    }
+
+    public static ArticleItem fromBitmap(Uri contentUri){
+        ArticleItem item = new ArticleItem();
+        item.setType(ArticleItem.TYPE_IMAGE);
+        item.setContentUri(contentUri);
+        return item;
     }
 
     public long getId() {
@@ -65,12 +82,21 @@ public class ArticleItem{
         this.articleId = articleId;
     }
 
-    public Object getData() {
-        return data;
+    public String getText() {
+        return text;
     }
 
-    public void setData(Object data) {
-        this.data = data;
+    public void setText(String text) {
+        this.text = text;
+        setChanged(true);
+    }
+
+    public Object getPayload() {
+        return payload;
+    }
+
+    public void setPayload(Object payload) {
+        this.payload = payload;
     }
 
     public Uri getContentUri() {
@@ -79,32 +105,15 @@ public class ArticleItem{
 
     public void setContentUri(Uri contentUri) {
         this.contentUri = contentUri;
+        setChanged(true);
     }
 
-    public static class Text extends ArticleItem{
-        public Text(String text) {
-            super();
-            this.type = ArticleItem.TYPE_TEXT;
-            this.data = text;
-        }
-
-        @Override
-        public String getData() {
-            return (String)data;
-        }
+    public boolean isChanged(){
+        return changed;
     }
 
-    public static class Image extends ArticleItem{
-        public Image(Bitmap bitmap){
-            super();
-            this.type = ArticleItem.TYPE_IMAGE;
-            this.data = bitmap;
-        }
-
-        @Override
-        public Bitmap getData() {
-            return (Bitmap)data;
-        }
+    public void setChanged(boolean value){
+        changed = value;
     }
 
 }

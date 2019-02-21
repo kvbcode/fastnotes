@@ -8,19 +8,17 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 
 import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.service.AppDataBase;
-import com.cyber.model.RowItem;
 
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     static final AppDataBase DB = App.getInstance().getDataBase();
-    static final String TAG = "CYBER";
+
+    static final int REQUEST_ARTICLE = 101;
 
     RecyclerView rv;
     RowItemAdapter rowsAdapter;
@@ -34,30 +32,53 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(v -> {
-            Intent intentMakeNote = new Intent(this, MakeNoteActivity.class);
-            startActivity(intentMakeNote);
-        });
+        fab.setOnClickListener(v -> doArticleEdit(App.NO_VALUE) );
 
         rowsAdapter = new RowItemAdapter();
 
         rv = findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager( this ));
         rv.setAdapter(rowsAdapter);
-        
-        doUpdateRows();
+
+        rowsAdapter.setOnItemPositionClickListener((v,i) -> doArticleEdit( rowsAdapter.get(i).getId() ));
+
+        doUpdateAllRows();
     }
 
-    protected void doUpdateRows(){
-        rowsAdapter.clear();
-
+    protected void doUpdateAllRows(){
         DB.articleDao().getAll()
-            .flatMapIterable( items -> items )
-            .doOnNext(a -> Log.v(TAG, "get article: " + a.id + ", " + a.title + ", date: " + a.date ))
             .subscribeOn(Schedulers.io())
-            .doOnComplete( () -> rowsAdapter.notifyDataSetChanged() )
-            .subscribe( rowItem -> rowsAdapter.add(rowItem));
-
+            .subscribe( rowsList -> rowsAdapter.setRowItemList(rowsList));
     }
 
+    protected void doUpdateRowById(long articleId){
+        int pos = rowsAdapter.getIndexById(articleId);
+        if (pos>=0){
+            rowsAdapter.notifyItemChanged(pos);
+        }else{
+            doUpdateAllRows();
+        }
+    }
+
+    protected void doArticleEdit(long articleId){
+        Log.v(App.TAG, "doArticleEdit(), id: " + articleId);
+
+        Intent intent = new Intent(this, MakeNoteActivity.class);
+        intent.putExtra(App.EXTRA_ID_NAME, articleId);
+
+        startActivityForResult(intent, REQUEST_ARTICLE);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode==RESULT_CANCELED) return;
+
+        if (requestCode==REQUEST_ARTICLE) {
+            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + data.getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE));
+            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, App.NO_VALUE);
+            doUpdateRowById(articleId);
+        }
+
+    }
 }

@@ -21,7 +21,7 @@ public interface ArticleItemDao {
     Flowable<List<ArticleItem>> getAll();
 
     @Query("SELECT * FROM articleitem WHERE article_id = :id")
-    Flowable<List<ArticleItem>> getByArticleId(long id);
+    Maybe<List<ArticleItem>> getByArticleId(long id);
 
     @Query("SELECT * FROM articleitem WHERE id = :id")
     Maybe<ArticleItem> getById(long id);

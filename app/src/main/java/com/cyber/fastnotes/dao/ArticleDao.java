@@ -7,8 +7,10 @@ import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
 import android.arch.persistence.room.Update;
+import android.util.Log;
 
 import com.cyber.fastnotes.App;
+import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 
@@ -17,9 +19,11 @@ import java.util.List;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 
 @Dao
 public abstract class ArticleDao {
+    public static AppDataBase DB = App.getInstance().getDataBase();
 
     @Query("SELECT * FROM ARTICLE")
     public abstract Flowable<List<Article>> getAll();
@@ -39,13 +43,30 @@ public abstract class ArticleDao {
     @Transaction
     public long saveFully(Article article){
         long id = insert(article);
-        ArticleItemDao articleItemDao = App.getInstance().getDataBase().articleItemDao();
+        long itemId;
 
-        for (ArticleItem item:article.getItems()){
+        ArticleItemDao articleItemDao = DB.articleItemDao();
+
+        for (ArticleItem item:article.getItems()) {
             item.setArticleId(id);
-            articleItemDao.insert(item);
+            itemId = articleItemDao.insert(item);
+            Log.v(App.TAG, "saved changed article item: id: " + itemId);
         }
 
         return id;
+    }
+
+
+    public Maybe<Article> loadFully(long id){
+        return Maybe.defer( () -> getById(id) )
+            .doOnEvent((ar, e) -> Log.v(App.TAG, "loadFully.map: " + ar))
+            .zipWith( DB.articleItemDao().getByArticleId( id ), (ar, items) -> {
+                ar.setItems(items);
+                return ar;
+            })
+            .doOnEvent((ar, e) -> {
+                if (ar!=null) Log.v(App.TAG, "loadFully.map with items: " + ar.size());
+            })
+        ;
     }
 }
