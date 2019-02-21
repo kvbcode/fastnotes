@@ -43,6 +43,8 @@ public abstract class ArticleDao {
     @Transaction
     public long saveFully(Article article){
 
+        Log.v(App.TAG, "saveSully article id: " + article.getId());
+
         long articleId = article.getId();
         if (article.isNew()) articleId = insert(article);
 

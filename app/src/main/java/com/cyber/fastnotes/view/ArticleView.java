@@ -89,9 +89,7 @@ public class ArticleView extends LinearLayout{
     private View getImageView(ArticleItem item) {
         ImageView img = new ImageView(this.getContext());
 
-        Bitmap bitmap = IOHelper.loadBitmap(this.getContext(), item.getContentUri());
-        Bitmap th = ThumbnailUtils.extractThumbnail(bitmap, 1024, 1024);
-        bitmap.recycle();
+        Bitmap th = IOHelper.getThumbnailFor(this.getContext(), item.getContentUri(), 1024, 1024, false);
 
         img.setImageBitmap(th);
         img.setOnClickListener( (v) -> doShowImage(this.getContext(), item.getContentUri() ) );
