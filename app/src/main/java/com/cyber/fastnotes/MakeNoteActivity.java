@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -19,6 +20,7 @@ import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.view.ArticleView;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
+import com.cyber.model.ParcelableArticleWrapper;
 
 import java.io.File;
 
@@ -90,7 +92,8 @@ public class MakeNoteActivity extends AppCompatActivity {
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
 
-        parseInputParams(getIntent());
+        if (savedInstanceState==null) parseInputParams(getIntent());
+
     }
 
     protected void parseInputParams(Intent in){
@@ -109,10 +112,29 @@ public class MakeNoteActivity extends AppCompatActivity {
     }
 
     protected void setArticle(Article article){
+        Log.v(App.TAG, "setArticle: " + article);
         this.article = article;
         articleView.setArticle(article);
         editTitle.setText(article.getTitle());
         editTitle.requestFocus();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(App.TAG, "onSaveInstanceState()");
+
+        ParcelableArticleWrapper parc = new ParcelableArticleWrapper( article );
+        outState.putParcelable( Article.class.getSimpleName(), parc );
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.d(App.TAG, "onRestoreInstanceState()");
+
+        ParcelableArticleWrapper parc = savedInstanceState.getParcelable( Article.class.getSimpleName() );
+        setArticle( parc.getArticle() );
     }
 
     @Override
@@ -141,7 +163,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fname);
         lastOutputFileUri = Uri.fromFile(file);
 
-        Log.v(App.TAG, "takePhoto() into: " + lastOutputFileUri);
+        Log.d(App.TAG, "takePhoto() into: " + lastOutputFileUri);
 
         Intent intent = new Intent( android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, lastOutputFileUri);
@@ -190,7 +212,7 @@ public class MakeNoteActivity extends AppCompatActivity {
 
     protected Maybe<Article> obsLoadArticle(long articleId){
         return db.articleDao().loadFully(articleId)
-            .doOnSuccess( ar -> Log.v(App.TAG, "load Article id: " + ar.getId()))
+            .doOnSuccess( ar -> Log.v(App.TAG, "loaded Article id: " + ar.getId()))
             .doOnError( e ->  Log.e(App.TAG, "obsLoadArticle() error: " + e.getMessage()) )
         ;
     }

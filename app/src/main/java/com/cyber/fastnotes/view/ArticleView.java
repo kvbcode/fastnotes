@@ -3,19 +3,16 @@ package com.cyber.fastnotes.view;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.model.Article;
@@ -89,7 +86,7 @@ public class ArticleView extends LinearLayout{
     private View getImageView(ArticleItem item) {
         ImageView img = new ImageView(this.getContext());
 
-        Bitmap th = IOHelper.getThumbnailFor(this.getContext(), item.getContentUri(), 1024, 1024, false);
+        Bitmap th = IOHelper.getThumbnailFor(this.getContext(), item.getContentUri(), 512, 512, false);
 
         img.setImageBitmap(th);
         img.setOnClickListener( (v) -> doShowImage(this.getContext(), item.getContentUri() ) );
