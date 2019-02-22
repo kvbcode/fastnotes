@@ -11,6 +11,7 @@ import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.service.SharedTypeConverter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -30,6 +31,18 @@ public class Article implements RowItem{
         title = "";
         date = new Date();
         items = new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Article(")
+        .append("id=").append(getId()).append(", ")
+        .append("title='").append(getTitle()).append("', ")
+        .append("date=").append(getDate()).append(", ")
+        .append("items=").append(Arrays.toString(getItems().toArray()))
+        .append(")");
+        return sb.toString();
     }
 
     public ArticleItem add(ArticleItem item){
