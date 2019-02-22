@@ -19,6 +19,8 @@ import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 
 public class ArticleView extends LinearLayout{
+    private static final int[] PAD = {8, 32, 8, 32};
+
 
     Article article;
 
@@ -80,6 +82,8 @@ public class ArticleView extends LinearLayout{
             if (!hasFocus) item.setText(((EditText)view).getText().toString());
         });
 
+        editText.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
+
         return editText;
     }
 
@@ -90,6 +94,10 @@ public class ArticleView extends LinearLayout{
 
         img.setImageBitmap(th);
         img.setOnClickListener( (v) -> doShowImage(this.getContext(), item.getContentUri() ) );
+        img.setAdjustViewBounds(true);
+        img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        img.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
         return img;
     }

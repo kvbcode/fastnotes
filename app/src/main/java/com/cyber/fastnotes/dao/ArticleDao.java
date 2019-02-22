@@ -14,6 +14,7 @@ import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 
+import java.util.Arrays;
 import java.util.List;
 
 import io.reactivex.Flowable;
@@ -43,19 +44,21 @@ public abstract class ArticleDao {
     @Transaction
     public long saveFully(Article article){
 
-        Log.v(App.TAG, "saveFully article id: " + article.getId());
+        Log.v(App.TAG, "saveFully(): " + article);
 
-        final long articleId;
         if (article.getId()==null){
-            articleId = insert(article);
+            insert(article);
         }else{
-            articleId = update(article);
+            update(article);
         }
+        final long articleId = article.getId();
+
 
         Observable.fromIterable(article.getItems())
             .filter(ArticleItem::isChanged)
             .doOnNext(item -> item.setArticleId(articleId))
             .toList()
+            .doOnSuccess( itemsList -> Log.v(App.TAG, "Article id: " + articleId + ", saved items count (changed): " + itemsList.size()))
             .subscribe( itemList -> DB.articleItemDao().insertAll(itemList));
 
         return articleId;

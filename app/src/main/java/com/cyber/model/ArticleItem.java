@@ -58,6 +58,31 @@ public class ArticleItem{
         return item;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        switch (getType()){
+            case TYPE_TEXT:
+                sb.append("Text(");
+                break;
+            case TYPE_IMAGE:
+                sb.append("Image(");
+                break;
+            default:
+                sb.append("None(");
+                break;
+        }
+        sb.append("id=").append(getId()).append(", ")
+        .append("aid=").append(getArticleId()).append(", ")
+        .append("uri='").append(getContentUri()).append("', ");
+
+        if (isChanged()) sb.append("changed");
+
+        sb.append(")");
+
+        return sb.toString();
+    }
+
     public Long getId() {
         return id;
     }
