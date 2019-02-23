@@ -48,6 +48,7 @@ public class ParcelableArticleWrapper implements Parcelable {
             dest.writeLong(article.getId());
         }
 
+        dest.writeInt( article.getState() );
         dest.writeString( article.getTitle() );
         dest.writeLong( article.getDate().getTime() );
 
@@ -61,10 +62,10 @@ public class ParcelableArticleWrapper implements Parcelable {
                 dest.writeLong( item.getId() );
             }
 
+            dest.writeInt( item.getState() );
             dest.writeInt( item.getType() );
             dest.writeString( item.getText() );
             dest.writeString( item.getContentUri()!=null? item.getContentUri().toString(): "" );
-            dest.writeInt( item.isChanged()? 1: 0 );
         }
     }
 
@@ -74,6 +75,7 @@ public class ParcelableArticleWrapper implements Parcelable {
         long articleId = p.readLong();
         if ( articleId != NO_ID ) ar.setId( articleId );
 
+        ar.setState( p.readInt() );
         ar.setTitle( p.readString() );
         ar.setDate( new Date( p.readLong() ) );
 
@@ -85,13 +87,12 @@ public class ParcelableArticleWrapper implements Parcelable {
             long itemId = p.readLong();
             if ( itemId != NO_ID ) item.setId( itemId );
 
+            item.setState( p.readInt() );
             item.setType( p.readInt() );
             item.setText( p.readString() );
 
             String uriStr = p.readString();
             if ( !uriStr.isEmpty() ) item.setContentUri( Uri.parse( uriStr ) );
-
-            item.setChanged( p.readInt()==1 );
 
             ar.add(item);
         }

@@ -1,16 +1,17 @@
 package com.cyber.fastnotes;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ScrollView;
@@ -38,6 +39,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     private AppDataBase db;
     private Uri lastOutputFileUri;
 
+    private Menu toolbarMenu;
     private EditText editTitle;
     private ArticleView articleView;
     private ScrollView scrollView;
@@ -51,8 +53,8 @@ public class MakeNoteActivity extends AppCompatActivity {
             switch (item.getItemId()) {
                 case R.id.menuAddText:
                     article.add(ArticleItem.fromText(""));
-                    articleView.notifyItemInserted();
-                    scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
+                    articleView.insertLastItemView();
+                    doScrollDown();
                     return true;
                 case R.id.menuAddPhoto:
                     takePhoto();
@@ -61,9 +63,9 @@ public class MakeNoteActivity extends AppCompatActivity {
                     getGalleryImage();
                     return true;
                 case R.id.menuAddAudio:
-                    article.add(ArticleItem.fromText("new AUDIO ITEM (TEXT)"));
-                    articleView.notifyItemInserted();
-                    scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
+                    article.add(ArticleItem.fromText("[ AUDIO ITEM STUB ]"));
+                    articleView.insertLastItemView();
+                    doScrollDown();
                     return true;
             }
             return false;
@@ -96,18 +98,27 @@ public class MakeNoteActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_editor, menu);
+        this.toolbarMenu = menu;
+        return true;
+    }
+
     protected void parseInputParams(Intent in){
         boolean isNew = in.getBooleanExtra(App.EXTRA_IS_NEW_NAME, true);
 
         if (isNew) {
             Log.v(App.TAG, "create new Article");
-            setArticle(new Article());
+            setArticle( new Article() );
+            setTitle(R.string.title_new_record);
         }else {
             final long articleId = in.getLongExtra(App.EXTRA_ID_NAME, Long.MIN_VALUE);
             obsLoadArticle(articleId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(ar -> setArticle(ar));
+            setTitle(R.string.title_edit_record);
         }
     }
 
@@ -116,7 +127,6 @@ public class MakeNoteActivity extends AppCompatActivity {
         this.article = article;
         articleView.setArticle(article);
         editTitle.setText(article.getTitle());
-        editTitle.requestFocus();
     }
 
     @Override
@@ -141,17 +151,23 @@ public class MakeNoteActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if(id == android.R.id.home){
-            obsSaveArticle()
-                .subscribeOn(Schedulers.io())
-                .doFinally(() -> finish())
-                .subscribe( articleId -> {
-                    Intent data = new Intent();
-                    data.putExtra(App.EXTRA_ID_NAME, articleId);
-                    setResult(RESULT_OK, data);
-                });
+        Log.v(App.TAG, "onOptionsItemSelected: " + id);
 
-            return true;
+        switch(id) {
+            case android.R.id.home:
+                setResult(RESULT_CANCELED);
+                finish();
+                break;
+            case R.id.menuSave:
+                obsSaveArticle()
+                    .subscribeOn(Schedulers.io())
+                    .doFinally(() -> finish())
+                    .subscribe( articleId -> {
+                        Intent data = new Intent();
+                        data.putExtra(App.EXTRA_ID_NAME, articleId);
+                        setResult(RESULT_OK, data);
+                    });
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -185,6 +201,8 @@ public class MakeNoteActivity extends AppCompatActivity {
 
             ArticleItem item = ArticleItem.fromBitmap(lastOutputFileUri);
             article.add(item);
+            articleView.insertLastItemView();
+            doScrollDown();
         }
 
         if (requestCode == GALLERY_IMAGE_REQUEST){
@@ -193,10 +211,13 @@ public class MakeNoteActivity extends AppCompatActivity {
 
             ArticleItem item = ArticleItem.fromBitmap(contentURI);
             article.add(item);
+            articleView.insertLastItemView();
+            doScrollDown();
         }
+    }
 
-        articleView.notifyItemInserted();
-        scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
+    public void doScrollDown(){
+        scrollView.postDelayed(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN), 1);
     }
 
     protected Maybe<Long> obsSaveArticle(){

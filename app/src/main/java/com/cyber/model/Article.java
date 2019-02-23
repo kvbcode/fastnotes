@@ -16,9 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-public class Article implements RowItem{
-    @PrimaryKey(autoGenerate = true)
-    public Long id;
+public class Article extends BasicModel implements RowItem{
 
     public String title;
 
@@ -38,6 +36,7 @@ public class Article implements RowItem{
         StringBuilder sb = new StringBuilder();
         sb.append("Article(")
         .append("id=").append(getId()).append(", ")
+        .append("state=").append(getStateString(getState())).append(", ")
         .append("title='").append(getTitle()).append("', ")
         .append("date=").append(getDate()).append(", ")
         .append("items=").append(Arrays.toString(getItems().toArray()))
@@ -69,15 +68,6 @@ public class Article implements RowItem{
 
     public void setItems(List<ArticleItem> items) {
         if (items!=null) this.items = items;
-    }
-
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     @Override

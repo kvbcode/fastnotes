@@ -4,23 +4,20 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.PrimaryKey;
-import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 @Entity(
     foreignKeys = @ForeignKey(entity = Article.class, parentColumns = "id", childColumns = "article_id", onDelete = CASCADE)
 )
-public class ArticleItem{
+public class ArticleItem extends BasicModel{
     public static final int TYPE_NONE = 0;
     public static final int TYPE_TEXT = 101;
     public static final int TYPE_IMAGE = 102;
     public static final int TYPE_AUDIO = 103;
-
-    @PrimaryKey(autoGenerate = true)
-    public Long id;
 
     public int type;
 
@@ -32,16 +29,12 @@ public class ArticleItem{
     @Ignore
     Object payload;
 
-    @Ignore
-    boolean changed;
-
     public Uri contentUri;
 
     public ArticleItem() {
         this.type = TYPE_NONE;
         this.payload = null;
         this.contentUri = null;
-        this.changed = false;
     }
 
     public static ArticleItem fromText(String text){
@@ -73,22 +66,12 @@ public class ArticleItem{
                 break;
         }
         sb.append("id=").append(getId()).append(", ")
+        .append("state=").append(getStateString(getState())).append(", ")
         .append("aid=").append(getArticleId()).append(", ")
-        .append("uri='").append(getContentUri()).append("', ");
-
-        if (isChanged()) sb.append("changed");
-
-        sb.append(")");
+        .append("uri='").append(getContentUri()).append("'")
+        .append(")");
 
         return sb.toString();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public int getType() {
@@ -99,7 +82,8 @@ public class ArticleItem{
         this.type = type;
     }
 
-    public long getArticleId() {
+    @Nullable
+    public Long getArticleId() {
         return articleId;
     }
 
@@ -113,7 +97,7 @@ public class ArticleItem{
 
     public void setText(String text) {
         this.text = text;
-        setChanged(true);
+        setChanged();
     }
 
     public Object getPayload() {
@@ -130,15 +114,7 @@ public class ArticleItem{
 
     public void setContentUri(Uri contentUri) {
         this.contentUri = contentUri;
-        setChanged(true);
-    }
-
-    public boolean isChanged(){
-        return changed;
-    }
-
-    public void setChanged(boolean value){
-        changed = value;
+        setChanged();
     }
 
 }

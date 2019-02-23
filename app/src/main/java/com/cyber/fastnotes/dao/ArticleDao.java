@@ -41,22 +41,32 @@ public abstract class ArticleDao {
     @Delete
     public abstract int delete(Article article);
 
+    public void eraseDeletedItems(Article article){
+        Observable.fromIterable( article.getItems() )
+            .filter( ArticleItem::isDeleted )
+            .subscribe( item -> {
+                Log.v(App.TAG, "Delete item: " + item);
+                DB.articleItemDao().delete( item );
+            });
+    }
+
     @Transaction
     public long saveFully(Article article){
 
         Log.v(App.TAG, "saveFully(): " + article);
 
-        if (article.getId()==null){
-            insert(article);
+        if (article.isNew()){
+            article.setId( insert(article) );
         }else{
             update(article);
         }
         final long articleId = article.getId();
 
+        eraseDeletedItems(article);
 
-        Observable.fromIterable(article.getItems())
-            .filter(ArticleItem::isChanged)
-            .doOnNext(item -> item.setArticleId(articleId))
+        Observable.fromIterable( article.getItems() )
+            .filter( ArticleItem::isChanged )
+            .doOnNext( item -> item.setArticleId( articleId ) )
             .toList()
             .doOnSuccess( itemsList -> Log.v(App.TAG, "Article id: " + articleId + ", saved items count (changed): " + itemsList.size()))
             .subscribe( itemList -> DB.articleItemDao().insertAll(itemList));
@@ -66,13 +76,14 @@ public abstract class ArticleDao {
 
 
     public Maybe<Article> loadFully(long id){
+
         return Maybe.defer( () -> getById(id) )
             .zipWith( DB.articleItemDao().getByArticleId( id ), (ar, items) -> {
                 ar.setItems(items);
                 return ar;
             })
             .doOnEvent((ar, e) -> {
-                if (ar!=null) Log.v(App.TAG, "loadFully article id: " + id + " with items: " + ar.size());
+                if (ar!=null) Log.v(App.TAG, "loadFully() article id: " + id + " with items: " + ar.size());
             })
         ;
     }
