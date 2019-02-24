@@ -1,7 +1,6 @@
 package com.cyber.fastnotes;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -22,8 +21,10 @@ import com.cyber.fastnotes.view.ArticleView;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
 import com.cyber.model.ParcelableArticleWrapper;
+import com.cyber.rx.ui.ObservableTextWatcher;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Maybe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -34,6 +35,10 @@ public class MakeNoteActivity extends AppCompatActivity {
     private static int PHOTO_REQUEST = 1101;
     private static int GALLERY_IMAGE_REQUEST = 1102;
     private static int AUDIO_REQUEST = 1103;
+
+    private static int DEBOUNCE_VALUE = 300;
+
+    private static final String PARAM_NAME_LAST_OUTPUT_URI = "last_uri";
 
     private Article article;
     private AppDataBase db;
@@ -79,10 +84,13 @@ public class MakeNoteActivity extends AppCompatActivity {
 
         db = App.getInstance().getDataBase();
 
+        ObservableTextWatcher watcher = new ObservableTextWatcher();
+        watcher.getOnChangedObservable()
+                .debounce(DEBOUNCE_VALUE, TimeUnit.MILLISECONDS)
+                .subscribe( str -> article.setTitle( str ) );
+
         editTitle = findViewById(R.id.editTitle);
-        editTitle.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus && article!=null) article.setTitle( editTitle.getText().toString() );
-        });
+        editTitle.addTextChangedListener(watcher);
 
         scrollView = findViewById(R.id.scrollView);
         articleView = findViewById(R.id.articleView);
@@ -134,14 +142,20 @@ public class MakeNoteActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         Log.d(App.TAG, "onSaveInstanceState()");
 
+        outState.putString(PARAM_NAME_LAST_OUTPUT_URI,
+            (lastOutputFileUri!=null)? lastOutputFileUri.toString(): "");
+
         ParcelableArticleWrapper parc = new ParcelableArticleWrapper( article );
         outState.putParcelable( Article.class.getSimpleName(), parc );
+
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         Log.d(App.TAG, "onRestoreInstanceState()");
+
+        lastOutputFileUri = Uri.parse( savedInstanceState.getString( PARAM_NAME_LAST_OUTPUT_URI ) );
 
         ParcelableArticleWrapper parc = savedInstanceState.getParcelable( Article.class.getSimpleName() );
         setArticle( parc.getArticle() );

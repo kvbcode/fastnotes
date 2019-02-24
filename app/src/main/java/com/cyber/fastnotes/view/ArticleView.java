@@ -21,6 +21,7 @@ import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.model.Article;
 import com.cyber.model.ArticleItem;
+import com.cyber.rx.ui.ObservableTextWatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -33,18 +34,6 @@ public class ArticleView extends LinearLayout{
     private static final int DEBOUNCE_VALUE = 300;
 
     Article article;
-
-    private static class ObservableTextWatcher implements TextWatcher {
-        private PublishSubject<String> pub = PublishSubject.create();
-
-        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-        @Override public void afterTextChanged(Editable s) { pub.onNext(s.toString()); }
-
-        public Observable<String> getObservable(){ return pub; }
-    }
 
 
     public ArticleView(Context context) {
@@ -118,7 +107,7 @@ public class ArticleView extends LinearLayout{
         editText.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
         ObservableTextWatcher watcher = new ObservableTextWatcher();
-        watcher.getObservable()
+        watcher.getOnChangedObservable()
             .debounce(DEBOUNCE_VALUE, TimeUnit.MILLISECONDS)
             .subscribe( str -> item.setText(str) );
 
