@@ -11,7 +11,6 @@ import android.util.Log;
 
 import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.service.AppDataBase;
-import com.cyber.model.Article;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;

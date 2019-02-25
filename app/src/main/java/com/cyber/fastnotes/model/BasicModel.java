@@ -1,12 +1,9 @@
-package com.cyber.model;
+package com.cyber.fastnotes.model;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.Nullable;
-import android.util.Log;
-
-import com.cyber.fastnotes.App;
 
 @Entity
 public abstract class BasicModel{

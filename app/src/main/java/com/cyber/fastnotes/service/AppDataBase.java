@@ -6,8 +6,8 @@ import android.arch.persistence.room.TypeConverters;
 
 import com.cyber.fastnotes.dao.ArticleDao;
 import com.cyber.fastnotes.dao.ArticleItemDao;
-import com.cyber.model.Article;
-import com.cyber.model.ArticleItem;
+import com.cyber.fastnotes.model.Article;
+import com.cyber.fastnotes.model.ArticleItem;
 
 @Database(entities = {Article.class, ArticleItem.class}, version = 2, exportSchema = false)
 @TypeConverters({SharedTypeConverter.class})

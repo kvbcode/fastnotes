@@ -6,8 +6,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -19,14 +17,11 @@ import android.widget.LinearLayout;
 import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
-import com.cyber.model.Article;
-import com.cyber.model.ArticleItem;
+import com.cyber.fastnotes.model.Article;
+import com.cyber.fastnotes.model.ArticleItem;
 import com.cyber.rx.ui.ObservableTextWatcher;
 
 import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
 
 public class ArticleView extends LinearLayout{
     private static final int[] PAD = {8, 32, 8, 32};

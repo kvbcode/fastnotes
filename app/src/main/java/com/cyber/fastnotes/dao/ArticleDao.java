@@ -3,23 +3,24 @@ package com.cyber.fastnotes.dao;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
-import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
 import android.arch.persistence.room.Update;
 import android.util.Log;
 
 import com.cyber.fastnotes.App;
+import com.cyber.fastnotes.model.BasicModel;
 import com.cyber.fastnotes.service.AppDataBase;
-import com.cyber.model.Article;
-import com.cyber.model.ArticleItem;
+import com.cyber.fastnotes.model.Article;
+import com.cyber.fastnotes.model.ArticleItem;
 
-import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 
 @Dao
@@ -41,37 +42,35 @@ public abstract class ArticleDao {
     @Delete
     public abstract int delete(Article article);
 
-    public void eraseDeletedItems(Article article){
-        Observable.fromIterable( article.getItems() )
-            .filter( ArticleItem::isDeleted )
-            .subscribe( item -> {
-                Log.v(App.TAG, "Delete item: " + item);
-                DB.articleItemDao().delete( item );
-            });
+    protected Single<Article> insertOrUpdate(Article article){
+        return Single.fromCallable( () -> {
+            if(article.isNew()){
+                article.setId( insert( article ) );
+                article.setState( Article.STATE_STORED );
+            }else{
+                update(article);
+            }
+            return article;
+        });
     }
 
-    @Transaction
-    public long saveFully(Article article){
+    public Single<Long> saveFully(Article article){
 
         Log.v(App.TAG, "saveFully(): " + article);
 
-        if (article.isNew()){
-            article.setId( insert(article) );
-        }else{
-            update(article);
-        }
-        final long articleId = article.getId();
-
-        eraseDeletedItems(article);
-
-        Observable.fromIterable( article.getItems() )
-            .filter( ArticleItem::isChanged )
-            .doOnNext( item -> item.setArticleId( articleId ) )
-            .toList()
-            .doOnSuccess( itemsList -> Log.v(App.TAG, "Article id: " + articleId + ", saved items count (changed): " + itemsList.size()))
-            .subscribe( itemList -> DB.articleItemDao().insertAll(itemList));
-
-        return articleId;
+        return Single.defer( () -> {
+                DB.beginTransaction();
+                return insertOrUpdate(article);
+            })
+            .subscribeOn( Schedulers.io() )
+            .doOnSuccess( ar -> {
+                int changedItemsCount = DB.articleItemDao().saveChangedItems(article.getId(), ar.getItems() ).blockingGet();
+                long deletedItemsCount = DB.articleItemDao().eraseDeletedItems( ar.getItems() ).blockingGet();
+                Log.d(App.TAG, "save Article id: " + ar.getId() + ", changed: " + changedItemsCount + ", deleted: " + deletedItemsCount);
+                DB.setTransactionSuccessful();
+            })
+            .doAfterTerminate( () -> DB.endTransaction() )
+            .map( ar -> ar.getId());
     }
 
 
@@ -82,9 +81,9 @@ public abstract class ArticleDao {
                 ar.setItems(items);
                 return ar;
             })
-            .doOnEvent((ar, e) -> {
-                if (ar!=null) Log.v(App.TAG, "loadFully() article id: " + id + " with items: " + ar.size());
-            })
+            .subscribeOn(Schedulers.io())
+            .doOnSuccess( ar -> Log.v(App.TAG, "loadFully() article id: " + ar.getId() + " with items: " + ar.size()))
+            .doOnError( e ->  Log.e(App.TAG, "loadFully() error: " + e.getMessage()) )
         ;
     }
 }

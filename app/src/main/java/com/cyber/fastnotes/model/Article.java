@@ -1,14 +1,7 @@
-package com.cyber.model;
+package com.cyber.fastnotes.model;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.PrimaryKey;
-import android.arch.persistence.room.TypeConverters;
-import android.graphics.Bitmap;
-import android.util.Log;
-
-import com.cyber.fastnotes.App;
-import com.cyber.fastnotes.service.SharedTypeConverter;
 
 import java.util.ArrayList;
 import java.util.Arrays;

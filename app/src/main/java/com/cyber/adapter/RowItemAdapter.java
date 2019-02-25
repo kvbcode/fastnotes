@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.cyber.fastnotes.R;
-import com.cyber.model.RowItem;
+import com.cyber.fastnotes.model.RowItem;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
