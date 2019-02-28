@@ -64,7 +64,7 @@ public class MakeNoteActivity extends AppCompatActivity {
                         actionGetGalleryImage();
                         return true;
                     case R.id.menuAddAudio:
-                        addArticleItem( ArticleItem.fromText("[ AUDIO ITEM STUB ]") );
+                        actionRecordAudio();
                         return true;
                 }
                 return false;
@@ -199,6 +199,24 @@ public class MakeNoteActivity extends AppCompatActivity {
         startActivityForResult(intent, GALLERY_IMAGE_REQUEST);
     }
 
+    public void actionRecordAudio(){
+        String fname = IOHelper.createFilename("rec_", "m4a");
+
+        File file = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), fname);
+        lastOutputFileUri = Uri.fromFile(file);
+
+        Log.d(App.TAG, "actionRecordAudio() into: " + lastOutputFileUri);
+
+        //external recording with default params
+        //Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+        //startActivityForResult(intent, AUDIO_REQUEST);
+
+        // internal recording with HQ
+        Intent intent = new Intent( this, AudioRecorderActivity.class );
+        intent.setData( lastOutputFileUri );
+        startActivityForResult(intent, AUDIO_REQUEST);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_CANCELED) return;
@@ -212,6 +230,12 @@ public class MakeNoteActivity extends AppCompatActivity {
             Uri contentURI = data.getData();
             Log.d(App.TAG, "success GALLERY_IMAGE_REQUEST, image Uri: " + contentURI);
             addArticleItem( ArticleItem.fromBitmap(contentURI) );
+        }
+
+        if (requestCode == AUDIO_REQUEST){
+            Uri contentURI = data.getData();
+            Log.d(App.TAG, "success AUDIO_REQUEST, file Uri: " + contentURI);
+            addArticleItem( ArticleItem.fromAudio(contentURI) );
         }
     }
 

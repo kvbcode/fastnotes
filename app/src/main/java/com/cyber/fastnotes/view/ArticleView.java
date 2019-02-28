@@ -3,17 +3,21 @@ package com.cyber.fastnotes.view;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.cyber.component.AudioPlayerComponent;
+import com.cyber.component.AudioRecorderComponent;
 import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
@@ -29,7 +33,7 @@ public class ArticleView extends LinearLayout{
     private static final int DEBOUNCE_VALUE = 300;
 
     Article article;
-
+    MediaPlayer mediaPlayer = new MediaPlayer();
 
     public ArticleView(Context context) {
         super(context);
@@ -88,6 +92,8 @@ public class ArticleView extends LinearLayout{
                 return getTextView(item);
             case ArticleItem.TYPE_IMAGE:
                 return getImageView(item);
+            case ArticleItem.TYPE_AUDIO:
+                return getAudioView(item);
         }
 
         return getTextView(item);
@@ -130,6 +136,20 @@ public class ArticleView extends LinearLayout{
         img.setOnLongClickListener( v -> deleteItem(item) );
 
         return img;
+    }
+
+    private View getAudioView(ArticleItem item){
+        AudioPlayerComponent playerComponent = new AudioPlayerComponent(getContext());
+        LayoutInflater.from(getContext()).inflate(R.layout.component_audio_player, playerComponent);
+        playerComponent.setMediaPlayer( mediaPlayer );
+        playerComponent.setAudioSource( item.contentUri );
+
+        playerComponent.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
+
+        playerComponent.setLongClickable( true );
+        playerComponent.setOnLongClickListener( v -> deleteItem(item) );
+
+        return playerComponent;
     }
 
     public void doShowImage(Context context, Uri contentUri){

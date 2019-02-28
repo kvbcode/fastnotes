@@ -50,6 +50,13 @@ public class ArticleItem extends BasicModel{
         return item;
     }
 
+    public static ArticleItem fromAudio(Uri contentUri){
+        ArticleItem item = new ArticleItem();
+        item.setType(ArticleItem.TYPE_AUDIO);
+        item.setContentUri(contentUri);
+        return item;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

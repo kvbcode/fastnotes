@@ -9,9 +9,13 @@
         android:id="@+id/rowItemCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        tools:layout_editor_absoluteX="4dp"
-        tools:layout_editor_absoluteY="0dp">
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:padding="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,10 +26,11 @@
 
             <ImageView
                 android:id="@+id/imageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="56sp"
+                android:layout_height="56sp"
                 android:layout_weight="0"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                android:padding="4sp"
+                app:srcCompat="@drawable/ic_description_grey" />
 
             <TextView
                 android:id="@+id/txtTitle"
@@ -44,6 +49,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
+                android:paddingBottom="4sp"
+                android:paddingLeft="8sp"
+                android:paddingRight="8sp"
+                android:paddingTop="4sp"
                 android:singleLine="true"
                 android:text="txtDateTime"
                 android:textAllCaps="false"

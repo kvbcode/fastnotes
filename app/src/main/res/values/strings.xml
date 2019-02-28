@@ -5,6 +5,7 @@
     <string name="title_activity_main">Список записей</string>
     <string name="title_activity_notes_list">FastNotes</string>
     <string name="title_activity_make_note">Новая запись</string>
+    <string name="title_activity_record_audio">Записать сообщение</string>
     <string name="title_new_record">Новая запись</string>
     <string name="title_edit_record">Редактирование</string>
     <string name="menu_add_text">Text</string>

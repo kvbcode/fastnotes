@@ -2,9 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cyber.fastnotes">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
 
     <application
         android:name=".App"
@@ -26,7 +26,10 @@
         </activity>
         <activity
             android:name=".MakeNoteActivity"
-            android:label="@string/title_activity_make_note"></activity>
+            android:label="@string/title_activity_make_note" />
+        <activity
+            android:name=".AudioRecorderActivity"
+            android:label="@string/title_activity_record_audio" />
     </application>
 
 </manifest>
