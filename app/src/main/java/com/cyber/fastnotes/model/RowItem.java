@@ -1,4 +1,4 @@
-package com.cyber.model;
+package com.cyber.fastnotes.model;
 
 import java.util.Date;
 

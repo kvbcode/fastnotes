@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.cyber.fastnotes.R;
-import com.cyber.model.RowItem;
+import com.cyber.fastnotes.model.RowItem;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
 
             txtTitle = container.findViewById(R.id.txtTitle);
             txtDateTime = container.findViewById(R.id.txtDateTime);
-            cardView = container.findViewById(R.id.messageRowItemCardView);
+            cardView = container.findViewById(R.id.rowItemCardView);
         }
 
         View bindItem(RowItem item){

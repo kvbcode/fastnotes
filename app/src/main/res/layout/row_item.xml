@@ -6,25 +6,31 @@
     android:layout_height="wrap_content">
 
     <android.support.v7.widget.CardView
-        android:id="@+id/messageRowItemCardView"
+        android:id="@+id/rowItemCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:padding="4dp"
-        tools:layout_editor_absoluteX="4dp">
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:padding="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:minHeight="50sp"
             android:orientation="horizontal">
 
             <ImageView
                 android:id="@+id/imageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="56sp"
+                android:layout_height="56sp"
                 android:layout_weight="0"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                android:padding="4sp"
+                app:srcCompat="@drawable/ic_description_grey" />
 
             <TextView
                 android:id="@+id/txtTitle"
@@ -34,7 +40,8 @@
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
                 android:singleLine="true"
-                android:text="txtFrom"
+                android:text="txtTitle"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -42,9 +49,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
+                android:paddingBottom="4sp"
+                android:paddingLeft="8sp"
+                android:paddingRight="8sp"
+                android:paddingTop="4sp"
                 android:singleLine="true"
                 android:text="txtDateTime"
-                android:textAllCaps="false" />
+                android:textAllCaps="false"
+                android:textSize="14sp" />
         </LinearLayout>
 
     </android.support.v7.widget.CardView>

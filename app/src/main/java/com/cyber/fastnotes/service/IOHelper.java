@@ -57,7 +57,6 @@ public abstract class IOHelper {
 
         String fnHash = getHash(contentUri.toString());
         String thumbFileName = fnHash + ".jpg";
-        //File thumbFile = new File(context.getExternalFilesDir("thumb"), thumbFileName);
         File thumbFile = new File(context.getExternalCacheDir(), thumbFileName);
 
         // try to load saved thumbnail
