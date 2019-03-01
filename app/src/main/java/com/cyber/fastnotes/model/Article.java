@@ -47,6 +47,13 @@ public class Article extends BasicModel implements RowItem{
         return items.get(index);
     }
 
+    public ArticleItem getById(Long id){
+        for(ArticleItem item:getItems()){
+            if (item.getId()==id) return item;
+        }
+        return null;
+    }
+
     public void remove(int index){
         items.remove(index);
     }

@@ -32,6 +32,10 @@ public abstract class IOHelper {
         return sb.toString();
     }
 
+    public static File createExternalFilePath(Context context, String dirType, String filePrefix, String fileExtension){
+        return new File(context.getExternalFilesDir(dirType), createFilename(filePrefix, fileExtension));
+    }
+
     public static Bitmap loadBitmap(Context context, Uri contentUri, boolean useStubOnError){
         Bitmap image = null;
 

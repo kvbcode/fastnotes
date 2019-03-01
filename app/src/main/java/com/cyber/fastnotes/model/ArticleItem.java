@@ -67,6 +67,9 @@ public class ArticleItem extends BasicModel{
             case TYPE_IMAGE:
                 sb.append("Image(");
                 break;
+            case TYPE_AUDIO:
+                sb.append("Audio(");
+                break;
             default:
                 sb.append("None(");
                 break;

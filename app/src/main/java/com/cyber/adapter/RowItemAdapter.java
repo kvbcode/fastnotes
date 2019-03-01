@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemViewHolder>{
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm dd/MM/yyyy");
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
     private final List<RowItem> rowItemList = new ArrayList<>();
 
@@ -50,6 +50,10 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
             if (id.equals(item.getId())) return i;
         }
         return -1;
+    }
+
+    public void remove(int index){
+        rowItemList.remove(index);
     }
 
     public void clear(){
@@ -92,8 +96,14 @@ public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemV
     public void onBindViewHolder(@NonNull RowItemViewHolder holder, int position) {
         View view = holder.bindItem( get(position) );
 
-        if (onItemClickListener !=null) view.setOnClickListener( v -> onItemClickListener.onItemClick(v, position));
-        if (onItemLongClickListener !=null) view.setOnClickListener( v  -> onItemLongClickListener.onItemClick(v, position));
+        if (onItemClickListener !=null) view.setOnClickListener( v -> {
+            onItemClickListener.onItemClick(v, position);
+        });
+
+        if (onItemLongClickListener !=null) view.setOnLongClickListener( v  -> {
+            onItemLongClickListener.onItemClick(v, position);
+            return true;
+        });
     }
 
     @Override

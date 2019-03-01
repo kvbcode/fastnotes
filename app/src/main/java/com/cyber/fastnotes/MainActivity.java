@@ -3,6 +3,7 @@ package com.cyber.fastnotes;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,8 +11,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.cyber.adapter.RowItemAdapter;
+import com.cyber.fastnotes.model.Article;
 import com.cyber.fastnotes.service.AppDataBase;
 
+import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -29,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(v -> doArticleEdit(0, true) );
 
         rowsAdapter = new RowItemAdapter();
@@ -41,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
         rv.setLayoutManager(new LinearLayoutManager( this ));
         rv.setAdapter(rowsAdapter);
 
-        rowsAdapter.setOnItemPositionClickListener((v,i) -> doArticleEdit( rowsAdapter.get(i).getId(), false ));
+        rowsAdapter.setOnItemPositionClickListener( (v,i) -> doArticleEdit( rowsAdapter.get(i).getId(), false ));
+        rowsAdapter.setOnItemPositionLongClickListener( (v,i) -> deleteArticleQuery( (Article)rowsAdapter.get(i) ));
 
         doUpdateAllRows();
     }
@@ -70,20 +74,41 @@ public class MainActivity extends AppCompatActivity {
     protected void doArticleEdit(long articleId, boolean isNew){
         Intent intent = new Intent(this, MakeNoteActivity.class);
 
-        intent.putExtra(App.EXTRA_IS_NEW_NAME, isNew);
+        intent.putExtra(App.PARAM_IS_NEW, isNew);
 
-        if (!isNew) intent.putExtra(App.EXTRA_ID_NAME, articleId);
+        if (!isNew) intent.putExtra(App.PARAM_ID, articleId);
 
         startActivityForResult(intent, REQUEST_ARTICLE);
     }
 
+    protected void deleteArticleQuery(Article article){
+        String title = "Удалить запись?\n" + article;
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setCancelable(true)
+                .setPositiveButton(android.R.string.ok, (d, i) -> deleteArticle( article ) )
+                .setNegativeButton(android.R.string.cancel, (d, i) -> d.cancel())
+                .show();
+    }
+
+    protected void deleteArticle(Article article){
+        int pos = rowsAdapter.getIndexById( article.getId() );
+
+        Completable.fromAction( () -> DB.articleDao().delete( article ))
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( () -> {
+                rowsAdapter.remove( pos );
+                rowsAdapter.notifyItemRemoved( pos );
+            });
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode==RESULT_CANCELED) return;
 
         if (requestCode==REQUEST_ARTICLE) {
-            long articleId = data.getLongExtra(App.EXTRA_ID_NAME, Long.MIN_VALUE);
+            long articleId = data.getLongExtra(App.PARAM_ID, Long.MIN_VALUE);
             Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + articleId);
             doUpdateRowById(articleId);
         }

@@ -19,7 +19,9 @@ import android.widget.LinearLayout;
 import com.cyber.component.AudioPlayerComponent;
 import com.cyber.component.AudioRecorderComponent;
 import com.cyber.fastnotes.App;
+import com.cyber.fastnotes.MakeNoteActivity;
 import com.cyber.fastnotes.R;
+import com.cyber.fastnotes.model.BasicModel;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.model.Article;
 import com.cyber.fastnotes.model.ArticleItem;
@@ -32,19 +34,29 @@ public class ArticleView extends LinearLayout{
 
     private static final int DEBOUNCE_VALUE = 300;
 
-    Article article;
-    MediaPlayer mediaPlayer = new MediaPlayer();
+    private MakeNoteActivity activityContext;
+    private Article article;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
 
     public ArticleView(Context context) {
         super(context);
+        onCreate(context);
     }
 
     public ArticleView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        onCreate(context);
     }
 
     public ArticleView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        onCreate(context);
+    }
+
+    public void onCreate(Context context){
+        if (context instanceof MakeNoteActivity){
+            activityContext = (MakeNoteActivity)context;
+        }
     }
 
     public void setArticle(Article article) {
@@ -85,6 +97,10 @@ public class ArticleView extends LinearLayout{
         }
     }
 
+    public void update(int index, ArticleItem newItemData){
+        newItemData.setArticleId( article.getId() );
+        article.getItems().set( index, newItemData );
+    }
 
     public View switchItemViewSupplier(ArticleItem item){
         switch(item.getType()){
@@ -143,6 +159,12 @@ public class ArticleView extends LinearLayout{
         LayoutInflater.from(getContext()).inflate(R.layout.component_audio_player, playerComponent);
         playerComponent.setMediaPlayer( mediaPlayer );
         playerComponent.setAudioSource( item.contentUri );
+        playerComponent.setTitle( item.getText() );
+
+        playerComponent.setOptionsButtonVisible(true);
+        playerComponent.setOnOptionButtonClick(v -> {
+            if (activityContext!=null) activityContext.actionRecordAudio( item );
+        });
 
         playerComponent.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
