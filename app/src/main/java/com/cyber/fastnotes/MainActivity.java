@@ -9,6 +9,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.model.Article;
@@ -82,9 +83,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void deleteArticleQuery(Article article){
-        String title = "Удалить запись?\n" + article;
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(title)
+                .setTitle( getString(R.string.query_delete_article) )
+                .setMessage( article.getTitle() )
                 .setCancelable(true)
                 .setPositiveButton(android.R.string.ok, (d, i) -> deleteArticle( article ) )
                 .setNegativeButton(android.R.string.cancel, (d, i) -> d.cancel())

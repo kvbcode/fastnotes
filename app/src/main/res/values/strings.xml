@@ -15,4 +15,6 @@
     <string name="hint_edit_title">Задайте заголовок</string>
     <string name="hint_edit_description">Задайте описание</string>
     <string name="hint_edit_text">введите текст</string>
+    <string name="query_delete_article">Удалить запись?</string>
+    <string name="query_delete_article_item">Удалить элемент?</string>
 </resources>

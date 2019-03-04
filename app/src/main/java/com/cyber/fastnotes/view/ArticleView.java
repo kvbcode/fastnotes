@@ -17,11 +17,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.cyber.component.AudioPlayerComponent;
-import com.cyber.component.AudioRecorderComponent;
 import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.MakeNoteActivity;
 import com.cyber.fastnotes.R;
-import com.cyber.fastnotes.model.BasicModel;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.model.Article;
 import com.cyber.fastnotes.model.ArticleItem;
@@ -131,7 +129,7 @@ public class ArticleView extends LinearLayout{
         editText.addTextChangedListener(watcher);
 
         editText.setLongClickable(true);
-        editText.setOnLongClickListener( v -> deleteItem(item) );
+        editText.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return editText;
     }
@@ -149,7 +147,7 @@ public class ArticleView extends LinearLayout{
         img.setOnClickListener( v -> doShowImage(this.getContext(), item.getContentUri() ) );
 
         img.setLongClickable(true);
-        img.setOnLongClickListener( v -> deleteItem(item) );
+        img.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return img;
     }
@@ -169,7 +167,7 @@ public class ArticleView extends LinearLayout{
         playerComponent.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
         playerComponent.setLongClickable( true );
-        playerComponent.setOnLongClickListener( v -> deleteItem(item) );
+        playerComponent.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return playerComponent;
     }
@@ -181,8 +179,8 @@ public class ArticleView extends LinearLayout{
         context.startActivity(intent);
     }
 
-    public boolean deleteItem(ArticleItem item){
-        String title = "Удалить элемент?\n" + item;
+    public boolean deleteItemQuery(ArticleItem item){
+        String title = getResources().getString(R.string.query_delete_article_item);
         AlertDialog dialog = new AlertDialog.Builder(getContext())
             .setTitle(title)
             .setCancelable(true)
