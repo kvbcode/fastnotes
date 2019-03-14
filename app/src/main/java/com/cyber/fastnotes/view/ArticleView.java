@@ -1,5 +1,6 @@
 package com.cyber.fastnotes.view;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -7,18 +8,21 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.cyber.component.AudioPlayerComponent;
-import com.cyber.component.AudioRecorderComponent;
 import com.cyber.fastnotes.App;
+import com.cyber.fastnotes.MakeNoteActivity;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.model.Article;
@@ -32,19 +36,29 @@ public class ArticleView extends LinearLayout{
 
     private static final int DEBOUNCE_VALUE = 300;
 
-    Article article;
-    MediaPlayer mediaPlayer = new MediaPlayer();
+    private MakeNoteActivity activityContext;
+    private Article article;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
 
     public ArticleView(Context context) {
         super(context);
+        onCreate(context);
     }
 
     public ArticleView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        onCreate(context);
     }
 
     public ArticleView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        onCreate(context);
+    }
+
+    public void onCreate(Context context){
+        if (context instanceof MakeNoteActivity){
+            activityContext = (MakeNoteActivity)context;
+        }
     }
 
     public void setArticle(Article article) {
@@ -85,6 +99,10 @@ public class ArticleView extends LinearLayout{
         }
     }
 
+    public void update(int index, ArticleItem newItemData){
+        newItemData.setArticleId( article.getId() );
+        article.getItems().set( index, newItemData );
+    }
 
     public View switchItemViewSupplier(ArticleItem item){
         switch(item.getType()){
@@ -94,6 +112,8 @@ public class ArticleView extends LinearLayout{
                 return getImageView(item);
             case ArticleItem.TYPE_AUDIO:
                 return getAudioView(item);
+            case ArticleItem.TYPE_BARCODE:
+                return getBarcodeView(item);
         }
 
         return getTextView(item);
@@ -115,7 +135,7 @@ public class ArticleView extends LinearLayout{
         editText.addTextChangedListener(watcher);
 
         editText.setLongClickable(true);
-        editText.setOnLongClickListener( v -> deleteItem(item) );
+        editText.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return editText;
     }
@@ -130,10 +150,10 @@ public class ArticleView extends LinearLayout{
         img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         img.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
-        img.setOnClickListener( v -> doShowImage(this.getContext(), item.getContentUri() ) );
+        img.setOnClickListener( v -> actionShowImage(this.getContext(), item.getContentUri() ) );
 
         img.setLongClickable(true);
-        img.setOnLongClickListener( v -> deleteItem(item) );
+        img.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return img;
     }
@@ -143,24 +163,52 @@ public class ArticleView extends LinearLayout{
         LayoutInflater.from(getContext()).inflate(R.layout.component_audio_player, playerComponent);
         playerComponent.setMediaPlayer( mediaPlayer );
         playerComponent.setAudioSource( item.contentUri );
+        playerComponent.setTitle( item.getText() );
+
+        playerComponent.setOptionsButtonVisible(true);
+        playerComponent.setOnOptionButtonClick(v -> {
+            if (activityContext!=null) activityContext.actionRecordAudio( item );
+        });
 
         playerComponent.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
         playerComponent.setLongClickable( true );
-        playerComponent.setOnLongClickListener( v -> deleteItem(item) );
+        playerComponent.setOnLongClickListener( v -> deleteItemQuery(item) );
 
         return playerComponent;
     }
 
-    public void doShowImage(Context context, Uri contentUri){
+    private View getBarcodeView(ArticleItem item) {
+        TextView textView = new TextView(this.getContext());
+        textView.setText(item.getText());
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18.0F);
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        textView.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
+
+        textView.setLongClickable(true);
+        textView.setOnLongClickListener( v -> deleteItemQuery(item) );
+
+        textView.setOnClickListener(view -> actionWebSearch(getContext(), item.getText()));
+
+        return textView;
+    }
+
+    public void actionWebSearch(Context context, String query){
+        Intent intent = new Intent(Intent.ACTION_WEB_SEARCH );
+        intent.putExtra(SearchManager.QUERY, query);
+        context.startActivity(intent);
+    }
+
+    public void actionShowImage(Context context, Uri contentUri){
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(contentUri, "image/*");
         context.startActivity(intent);
     }
 
-    public boolean deleteItem(ArticleItem item){
-        String title = "Удалить элемент?\n" + item;
+    public boolean deleteItemQuery(ArticleItem item){
+        String title = getResources().getString(R.string.query_delete_article_item);
         AlertDialog dialog = new AlertDialog.Builder(getContext())
             .setTitle(title)
             .setCancelable(true)

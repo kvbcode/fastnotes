@@ -8,10 +8,14 @@
 
     <ImageButton
         android:id="@+id/butStartStop"
-        android:layout_width="250sp"
-        android:layout_height="250sp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
         android:background="@color/bgGrey"
-        android:scaleType="centerInside"
+        android:maxHeight="230sp"
+        android:maxWidth="230sp"
+        android:scaleType="fitCenter"
         app:srcCompat="@drawable/ic_mic_white" />
 
     <TextView

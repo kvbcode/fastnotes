@@ -55,17 +55,8 @@ public class ParcelableArticleWrapper implements Parcelable {
         dest.writeInt( article.getItems().size() );
 
         for(ArticleItem item:article.getItems()){
-
-            if (item.getId() == null){
-                dest.writeLong( NO_ID );
-            }else {
-                dest.writeLong( item.getId() );
-            }
-
-            dest.writeInt( item.getState() );
-            dest.writeInt( item.getType() );
-            dest.writeString( item.getText() );
-            dest.writeString( item.getContentUri()!=null? item.getContentUri().toString(): "" );
+            ParcelableArticleItemWrapper itemWrapper = new ParcelableArticleItemWrapper(item);
+            itemWrapper.writeToParcel( dest, flags );
         }
     }
 
@@ -82,18 +73,7 @@ public class ParcelableArticleWrapper implements Parcelable {
         int size = p.readInt();
 
         for(int i=0; i<size; i++){
-            ArticleItem item = new ArticleItem();
-
-            long itemId = p.readLong();
-            if ( itemId != NO_ID ) item.setId( itemId );
-
-            item.setState( p.readInt() );
-            item.setType( p.readInt() );
-            item.setText( p.readString() );
-
-            String uriStr = p.readString();
-            if ( !uriStr.isEmpty() ) item.setContentUri( Uri.parse( uriStr ) );
-
+            ArticleItem item = ParcelableArticleItemWrapper.loadFromParcel(p);
             ar.add(item);
         }
 

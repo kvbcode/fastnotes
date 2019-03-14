@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical|fill_horizontal"
@@ -12,12 +13,13 @@
         android:layout_height="60sp"
         android:contentDescription="PlayPause"
         android:padding="4sp"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         app:srcCompat="@drawable/ic_play_arrow_white" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
@@ -25,17 +27,27 @@
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_gravity="center" />
 
         <TextView
             android:id="@+id/txtTrackInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:gravity="end"
             android:includeFontPadding="false"
             android:paddingLeft="8dp"
             android:paddingRight="8dp" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/butOptions"
+        android:layout_width="60sp"
+        android:layout_height="60sp"
+        android:contentDescription="Open"
+        android:padding="4sp"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_open__white"
+        tools:visibility="visible" />
 
 </LinearLayout>

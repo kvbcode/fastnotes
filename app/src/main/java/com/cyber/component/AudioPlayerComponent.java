@@ -35,7 +35,9 @@ public class AudioPlayerComponent extends LinearLayout {
     private SeekBar seekBar;
     private ImageButton butPlayPause;
     private TextView txtTrackInfo;
+    private ImageButton butOptions;
 
+    private String title = "";
     private Uri contentUri;
     private boolean isPlayerReady = false;
 
@@ -60,6 +62,7 @@ public class AudioPlayerComponent extends LinearLayout {
         seekBar = findViewById(R.id.seekBar);
         butPlayPause = findViewById(R.id.butPlayPause);
         txtTrackInfo = findViewById(R.id.txtTrackInfo);
+        butOptions = findViewById(R.id.butOptions);
 
         butPlayPause.setOnClickListener( v -> {
             if (mediaPlayer.isPlaying()){
@@ -104,9 +107,23 @@ public class AudioPlayerComponent extends LinearLayout {
 
     }
 
+    public void setTitle( String title ){
+        this.title = title;
+        txtTrackInfo.setText( title );
+    }
+
+    public void setOptionsButtonVisible(boolean visible){
+        butOptions.setVisibility( visible? VISIBLE: GONE );
+    }
+
+    public void setOnOptionButtonClick(OnClickListener listener){
+        butOptions.setOnClickListener( listener );
+    }
+
     private void setTrackInfoUpdateInterval(long msec){
         if (msec == 0){
             if (mediaPlayerSubDisposable!=null && !mediaPlayerSubDisposable.isDisposed()) mediaPlayerSubDisposable.dispose();
+            if (isPlayerReady) txtTrackInfo.setText( title );
             return;
         }
 

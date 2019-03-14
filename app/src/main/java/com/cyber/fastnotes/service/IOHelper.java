@@ -14,6 +14,8 @@ import com.cyber.fastnotes.App;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +32,10 @@ public abstract class IOHelper {
         sb.append(extension);
 
         return sb.toString();
+    }
+
+    public static File createExternalFilePath(Context context, String dirType, String filePrefix, String fileExtension){
+        return new File(context.getExternalFilesDir(dirType), createFilename(filePrefix, fileExtension));
     }
 
     public static Bitmap loadBitmap(Context context, Uri contentUri, boolean useStubOnError){
@@ -98,6 +104,20 @@ public abstract class IOHelper {
             e.printStackTrace();
         }
         return ret;
+    }
+
+    public static long transfer(final InputStream in, final OutputStream out) throws IOException{
+        long count = 0;
+        int len;
+
+        byte[] buf = new byte[4096];
+        while ((len = in.read(buf)) != -1) {
+            out.write(buf, 0, len);
+            count += len;
+        }
+        out.flush();
+
+        return count;
     }
 
 }

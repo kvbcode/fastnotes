@@ -6,12 +6,22 @@
     <string name="title_activity_notes_list">FastNotes</string>
     <string name="title_activity_make_note">Новая запись</string>
     <string name="title_activity_record_audio">Записать сообщение</string>
+    <string name="title_activity_barcodes">Сканирование кодов</string>
     <string name="title_new_record">Новая запись</string>
     <string name="title_edit_record">Редактирование</string>
     <string name="menu_add_text">Text</string>
     <string name="menu_add_photo">Photo</string>
     <string name="menu_add_gallery">Gallery</string>
     <string name="menu_add_audio">Audio</string>
+    <string name="menu_add_barcode">Barcode</string>
     <string name="hint_edit_title">Задайте заголовок</string>
+    <string name="hint_edit_description">Задайте описание</string>
     <string name="hint_edit_text">введите текст</string>
+    <string name="query_delete_article">Удалить запись?</string>
+    <string name="query_delete_article_item">Удалить элемент?</string>
+    <string name="title_select_action">Выберите действие:</string>
+    <string name="menu_open">Открыть</string>
+    <string name="menu_export">Экспорт</string>
+    <string name="menu_delete">Удалить</string>
+
 </resources>

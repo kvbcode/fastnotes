@@ -20,5 +20,9 @@
         android:id="@+id/menuAddAudio"
         android:icon="@android:drawable/ic_btn_speak_now"
         android:title="@string/menu_add_audio" />
+    <item
+        android:id="@+id/menuAddBarcode"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="@string/menu_add_barcode" />
 
 </menu>

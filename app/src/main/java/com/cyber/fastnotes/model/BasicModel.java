@@ -54,7 +54,7 @@ public abstract class BasicModel{
     }
 
     public boolean isNew(){
-        return state==STATE_NEW;
+        return (state==STATE_NEW) || (id==null);
     }
 
     public boolean isStored(){

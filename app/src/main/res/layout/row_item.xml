@@ -40,9 +40,9 @@
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
                 android:singleLine="true"
-                android:text="txtTitle"
                 android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="Title" />
 
             <TextView
                 android:id="@+id/txtDateTime"
@@ -54,9 +54,9 @@
                 android:paddingRight="8sp"
                 android:paddingTop="4sp"
                 android:singleLine="true"
-                android:text="txtDateTime"
                 android:textAllCaps="false"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                tools:text="01.01.2019" />
         </LinearLayout>
 
     </android.support.v7.widget.CardView>
