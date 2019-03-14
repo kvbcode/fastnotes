@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,7 @@ public class BarcodeScannerActivity extends AppCompatActivity implements ZXingSc
     @Override
     public void onResume() {
         super.onResume();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mScannerView.setResultHandler(this);
         mScannerView.startCamera();
     }
@@ -53,6 +55,7 @@ public class BarcodeScannerActivity extends AppCompatActivity implements ZXingSc
     @Override
     public void onPause() {
         super.onPause();
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mScannerView.stopCamera();
     }
 

@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -180,6 +181,7 @@ public class ArticleView extends LinearLayout{
     private View getBarcodeView(ArticleItem item) {
         TextView textView = new TextView(this.getContext());
         textView.setText(item.getText());
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18.0F);
         textView.setMovementMethod(LinkMovementMethod.getInstance());
 
         textView.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
