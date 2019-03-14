@@ -17,4 +17,9 @@
     <string name="hint_edit_text">введите текст</string>
     <string name="query_delete_article">Удалить запись?</string>
     <string name="query_delete_article_item">Удалить элемент?</string>
+    <string name="title_select_action">Выберите действие:</string>
+    <string name="menu_open">Открыть</string>
+    <string name="menu_export">Экспорт</string>
+    <string name="menu_delete">Удалить</string>
+
 </resources>
