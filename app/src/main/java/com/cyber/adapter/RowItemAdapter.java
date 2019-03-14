@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.model.RowItem;
 
@@ -17,7 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class RowItemAdapter extends RecyclerView.Adapter<RowItemAdapter.RowItemViewHolder>{
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat(App.DATE_FORMAT);
 
     private final List<RowItem> rowItemList = new ArrayList<>();
 

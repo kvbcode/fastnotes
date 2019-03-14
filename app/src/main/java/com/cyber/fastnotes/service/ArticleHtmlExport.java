@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.cyber.fastnotes.App;
 import com.cyber.fastnotes.BuildConfig;
 import com.cyber.fastnotes.model.Article;
 import com.cyber.fastnotes.model.ArticleItem;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 public class ArticleHtmlExport {
     private static String TAG = "ArticleHtmlExport";
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat(App.DATE_FORMAT);
 
     private final static String HTML_HEADER =
         "<!doctype html>" +
