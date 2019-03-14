@@ -1,5 +1,6 @@
 package com.cyber.fastnotes.view;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -7,6 +8,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.cyber.component.AudioPlayerComponent;
 import com.cyber.fastnotes.App;
@@ -108,6 +111,8 @@ public class ArticleView extends LinearLayout{
                 return getImageView(item);
             case ArticleItem.TYPE_AUDIO:
                 return getAudioView(item);
+            case ArticleItem.TYPE_BARCODE:
+                return getBarcodeView(item);
         }
 
         return getTextView(item);
@@ -144,7 +149,7 @@ public class ArticleView extends LinearLayout{
         img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         img.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
 
-        img.setOnClickListener( v -> doShowImage(this.getContext(), item.getContentUri() ) );
+        img.setOnClickListener( v -> actionShowImage(this.getContext(), item.getContentUri() ) );
 
         img.setLongClickable(true);
         img.setOnLongClickListener( v -> deleteItemQuery(item) );
@@ -172,7 +177,28 @@ public class ArticleView extends LinearLayout{
         return playerComponent;
     }
 
-    public void doShowImage(Context context, Uri contentUri){
+    private View getBarcodeView(ArticleItem item) {
+        TextView textView = new TextView(this.getContext());
+        textView.setText(item.getText());
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        textView.setPadding(PAD[0], PAD[1], PAD[2], PAD[3]);
+
+        textView.setLongClickable(true);
+        textView.setOnLongClickListener( v -> deleteItemQuery(item) );
+
+        textView.setOnClickListener(view -> actionWebSearch(getContext(), item.getText()));
+
+        return textView;
+    }
+
+    public void actionWebSearch(Context context, String query){
+        Intent intent = new Intent(Intent.ACTION_WEB_SEARCH );
+        intent.putExtra(SearchManager.QUERY, query);
+        context.startActivity(intent);
+    }
+
+    public void actionShowImage(Context context, Uri contentUri){
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(contentUri, "image/*");

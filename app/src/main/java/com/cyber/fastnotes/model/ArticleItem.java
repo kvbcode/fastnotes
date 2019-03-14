@@ -17,6 +17,7 @@ public class ArticleItem extends BasicModel{
     public static final int TYPE_TEXT = 101;
     public static final int TYPE_IMAGE = 102;
     public static final int TYPE_AUDIO = 103;
+    public static final int TYPE_BARCODE = 104;
 
     public int type;
 
@@ -57,6 +58,13 @@ public class ArticleItem extends BasicModel{
         return item;
     }
 
+    public static ArticleItem fromBarcode(String text){
+        ArticleItem item = new ArticleItem();
+        item.setType(ArticleItem.TYPE_BARCODE);
+        item.setText(text);
+        return item;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -69,6 +77,9 @@ public class ArticleItem extends BasicModel{
                 break;
             case TYPE_AUDIO:
                 sb.append("Audio(");
+                break;
+            case TYPE_BARCODE:
+                sb.append("Barcode(");
                 break;
             default:
                 sb.append("None(");

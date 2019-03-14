@@ -26,6 +26,7 @@ import com.cyber.fastnotes.model.ArticleItem;
 import com.cyber.fastnotes.model.ParcelableArticleWrapper;
 import com.cyber.rx.ui.ObservableTextWatcher;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -35,6 +36,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     private static int PHOTO_REQUEST = 1101;
     private static int GALLERY_IMAGE_REQUEST = 1102;
     private static int AUDIO_REQUEST = 1103;
+    private static int BARCODE_REQUEST = 1104;
 
     private Article article;
     private AppDataBase db;
@@ -60,6 +62,9 @@ public class MakeNoteActivity extends AppCompatActivity {
                         return true;
                     case R.id.menuAddAudio:
                         actionRecordAudio(null);
+                        return true;
+                    case R.id.menuAddBarcode:
+                        actionTakeBarcodes();
                         return true;
                 }
                 return false;
@@ -208,6 +213,11 @@ public class MakeNoteActivity extends AppCompatActivity {
         startActivityForResult(intent, AUDIO_REQUEST);
     }
 
+    public void actionTakeBarcodes(){
+        Intent intent = new Intent(this, BarcodeScannerActivity.class);
+        startActivityForResult(intent, BARCODE_REQUEST);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_CANCELED) return;
@@ -232,6 +242,14 @@ public class MakeNoteActivity extends AppCompatActivity {
                 addArticleItem( item );
             }else{
                 updateArticleItem( item );
+            }
+        }
+
+        if (requestCode == BARCODE_REQUEST){
+            ArrayList<String> barcodeList = data.getStringArrayListExtra( BarcodeScannerActivity.PARAM_BARCODE_LIST );
+            Log.d(App.TAG, "success BARCODE_REQUEST items: " + barcodeList.size());
+            for(String barcode:barcodeList){
+                addArticleItem( ArticleItem.fromBarcode( barcode ) );
             }
         }
     }
