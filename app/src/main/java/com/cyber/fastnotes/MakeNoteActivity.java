@@ -1,22 +1,24 @@
 package com.cyber.fastnotes;
 
+import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
-import com.cyber.component.AudioPlayerComponent;
 import com.cyber.fastnotes.model.ParcelableArticleItemWrapper;
 import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.fastnotes.service.IOHelper;
@@ -33,10 +35,21 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 
 
 public class MakeNoteActivity extends AppCompatActivity {
-    private static int PHOTO_REQUEST = 1101;
-    private static int GALLERY_IMAGE_REQUEST = 1102;
-    private static int AUDIO_REQUEST = 1103;
-    private static int BARCODE_REQUEST = 1104;
+    private static final int PHOTO_REQUEST = 1101;
+    private static final int GALLERY_IMAGE_REQUEST = 1102;
+    private static final int AUDIO_REQUEST = 1103;
+    private static final int BARCODE_REQUEST = 1104;
+
+    private static final int INIT_PERMISSIONS_REQUEST = 3000;
+
+    private static final String[] STORAGE_PERMISSIONS = {
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
+
+    private static final String[] CAMERA_PERMISSION = {
+        Manifest.permission.CAMERA,
+    };
 
     private Article article;
     private AppDataBase db;
@@ -55,7 +68,7 @@ public class MakeNoteActivity extends AppCompatActivity {
                         addArticleItem( ArticleItem.fromText("") );
                         return true;
                     case R.id.menuAddPhoto:
-                        lastOutputFileUri = actionTakePhoto();
+                        actionTakePhoto();
                         return true;
                     case R.id.menuAddGallery:
                         actionGetGalleryImage();
@@ -95,8 +108,33 @@ public class MakeNoteActivity extends AppCompatActivity {
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
 
-        if (savedInstanceState==null) parseInputParams(getIntent());
+        if (!App.isPermissionsGranted(this, STORAGE_PERMISSIONS) ) {
+            App.requestRuntimePermissions(this, STORAGE_PERMISSIONS, INIT_PERMISSIONS_REQUEST);
+        }else{
+            initWithPermissions();
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (!App.isRequestedPermissionsGranted(permissions, grantResults)){
+            Toast.makeText(this, R.string.status_denied, Toast.LENGTH_SHORT).show();
+
+            if (requestCode == INIT_PERMISSIONS_REQUEST) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        }else {
+            if (requestCode == INIT_PERMISSIONS_REQUEST) initWithPermissions();
+
+            if (requestCode == PHOTO_REQUEST) actionTakePhoto();
+        }
+    }
+
+    protected void initWithPermissions(){
+        parseInputParams(getIntent());
     }
 
     @Override
@@ -140,8 +178,10 @@ public class MakeNoteActivity extends AppCompatActivity {
         outState.putString( App.PARAM_LAST_OUTPUT_URI,
             (lastOutputFileUri!=null)? lastOutputFileUri.toString(): "");
 
-        ParcelableArticleWrapper parc = new ParcelableArticleWrapper( article );
-        outState.putParcelable( Article.class.getSimpleName(), parc );
+        if (article!=null) {
+            ParcelableArticleWrapper parc = new ParcelableArticleWrapper(article);
+            outState.putParcelable(Article.class.getSimpleName(), parc);
+        }
 
     }
 
@@ -153,7 +193,7 @@ public class MakeNoteActivity extends AppCompatActivity {
         lastOutputFileUri = Uri.parse( savedInstanceState.getString( App.PARAM_LAST_OUTPUT_URI ) );
 
         ParcelableArticleWrapper parc = savedInstanceState.getParcelable( Article.class.getSimpleName() );
-        setArticle( parc.getArticle() );
+        if (parc!=null) setArticle( parc.getArticle() );
     }
 
     @Override
@@ -180,22 +220,40 @@ public class MakeNoteActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public Uri actionTakePhoto(){
+    public void actionTakePhoto(){
+        if (!App.isPermissionsGranted(this, CAMERA_PERMISSION)){
+            App.requestRuntimePermissions(this, CAMERA_PERMISSION, PHOTO_REQUEST);
+            return;
+        }
+
         Uri outputUri = Uri.fromFile( IOHelper.createExternalFilePath( this, Environment.DIRECTORY_PICTURES, "img_", "jpg" ) );
+        lastOutputFileUri = outputUri;
 
         Log.d(App.TAG, "actionTakePhoto() into: " + outputUri);
 
         Intent intent = new Intent( android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
-        startActivityForResult(intent, PHOTO_REQUEST);
 
-        return outputUri;
+        try {
+            startActivityForResult(intent, PHOTO_REQUEST);
+        }catch(ActivityNotFoundException e){
+            String text = "Camera application error: " + e.getMessage();
+            Log.e(App.TAG, text);
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        }
     }
 
     public void actionGetGalleryImage(){
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
         intent.setType("image/*");
-        startActivityForResult(intent, GALLERY_IMAGE_REQUEST);
+
+        try {
+            startActivityForResult(intent, GALLERY_IMAGE_REQUEST);
+        }catch(ActivityNotFoundException e){
+            String text = "Gallery application error: " + e.getMessage();
+            Log.e(App.TAG, text);
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        }
     }
 
     public void actionRecordAudio(ArticleItem articleItem){

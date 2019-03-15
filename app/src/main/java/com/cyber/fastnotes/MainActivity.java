@@ -1,9 +1,11 @@
 package com.cyber.fastnotes;
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -28,10 +30,16 @@ public class MainActivity extends AppCompatActivity {
 
     static final AppDataBase DB = App.getInstance().getDataBase();
 
-    static final int REQUEST_ARTICLE = 101;
+    private static final int ARTICLE_REQUEST = 101;
+    private static final int EXPORT_ARTICLE_REQUEST = 102;
+
+    private static final String[] STORAGE_PERMISSIONS = {
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
 
     RecyclerView rv;
     RowItemAdapter rowsAdapter;
+    Article activeArticle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (!isNew) intent.putExtra(App.PARAM_ID, articleId);
 
-        startActivityForResult(intent, REQUEST_ARTICLE);
+        startActivityForResult(intent, ARTICLE_REQUEST);
     }
 
     protected void deleteArticleQuery(Article article){
@@ -111,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void showArticleMenu(Article article){
+        activeArticle = article;
+
         AlertDialog dialog = new AlertDialog.Builder(this)
             .setTitle( R.string.title_select_action )
             .setMessage( article.getTitle() )
@@ -128,14 +138,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void exportArticle(Article article){
-        boolean result = false;
+        if (!App.isPermissionsGranted(this, STORAGE_PERMISSIONS)){
+            App.requestRuntimePermissions(this, STORAGE_PERMISSIONS, EXPORT_ARTICLE_REQUEST);
+            return;
+        }
+
         Log.v(App.TAG, "try export article");
         ArticleHtmlExport exporter = new ArticleHtmlExport(this);
         String dirDocuments = Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT ? "Document" : Environment.DIRECTORY_DOCUMENTS;
         File outDir = Environment.getExternalStoragePublicDirectory( dirDocuments );
-        result = exporter.export( article, outDir );
-        if (result){
-            Toast.makeText(this, "Экспорт завершен\nсохранено в " + outDir, Toast.LENGTH_LONG).show();
+
+        DB.articleDao().loadFully( article.getId() )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( ar -> {
+                if (exporter.export( ar, outDir ))
+                    Toast.makeText(this, "Экспорт завершен\nсохранено в " + outDir, Toast.LENGTH_LONG).show();
+            } );
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (!App.isRequestedPermissionsGranted(permissions, grantResults)){
+            Toast.makeText(this, R.string.status_denied, Toast.LENGTH_SHORT).show();
+        }else{
+            if (requestCode==EXPORT_ARTICLE_REQUEST) exportArticle(activeArticle);
         }
     }
 
@@ -143,9 +172,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode==RESULT_CANCELED) return;
 
-        if (requestCode==REQUEST_ARTICLE) {
+        if (requestCode== ARTICLE_REQUEST) {
             long articleId = data.getLongExtra(App.PARAM_ID, Long.MIN_VALUE);
-            Log.v(App.TAG, "REQUEST_ARTICLE success, article id: " + articleId);
+            Log.v(App.TAG, "ARTICLE_REQUEST success, article id: " + articleId);
             updateRowById(articleId);
         }
 

@@ -1,6 +1,8 @@
 package com.cyber.fastnotes;
 
+import android.Manifest;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +23,12 @@ public class BarcodeScannerActivity extends AppCompatActivity implements ZXingSc
     public static final String PARAM_BARCODE_LIST = "barcode_list";
     private static final long DEBOUNCE_INTERVAL = 1000;
 
+    private static final int INIT_PERMISSION_REQUEST = 3000;
+
+    private static final String[] CAMERA_PERMISSION = {
+        Manifest.permission.CAMERA,
+    };
+
     private String mTitle;
 
     private ZXingScannerView mScannerView;
@@ -37,6 +45,30 @@ public class BarcodeScannerActivity extends AppCompatActivity implements ZXingSc
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setHomeButtonEnabled(true);
 
+        if (!App.isPermissionsGranted(this, CAMERA_PERMISSION)){
+            App.requestRuntimePermissions(this, CAMERA_PERMISSION, INIT_PERMISSION_REQUEST);
+        }else{
+            initWithPermissions();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (!App.isRequestedPermissionsGranted(permissions, grantResults)){
+            Toast.makeText(this, R.string.status_denied, Toast.LENGTH_SHORT).show();
+
+            if (requestCode == INIT_PERMISSION_REQUEST) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        }else {
+            if (requestCode == INIT_PERMISSION_REQUEST) initWithPermissions();
+        }
+    }
+
+    protected void initWithPermissions(){
         mScannerView = new ZXingScannerView(this);
         mScannerView.setAutoFocus(true);
         setContentView(mScannerView);
@@ -47,16 +79,20 @@ public class BarcodeScannerActivity extends AppCompatActivity implements ZXingSc
     @Override
     public void onResume() {
         super.onResume();
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mScannerView.setResultHandler(this);
-        mScannerView.startCamera();
+        if (mScannerView!=null) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            mScannerView.setResultHandler(this);
+            mScannerView.startCamera();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mScannerView.stopCamera();
+        if (mScannerView!=null) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            mScannerView.stopCamera();
+        }
     }
 
     @Override

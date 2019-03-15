@@ -23,5 +23,7 @@
     <string name="menu_open">Открыть</string>
     <string name="menu_export">Экспорт</string>
     <string name="menu_delete">Удалить</string>
+    <string name="status_granted">Разрешено</string>
+    <string name="status_denied">Запрещено</string>
 
 </resources>

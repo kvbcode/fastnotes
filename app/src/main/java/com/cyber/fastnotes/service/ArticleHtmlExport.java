@@ -46,7 +46,7 @@ public class ArticleHtmlExport {
     public boolean export(final Article article, File outDir){
         if (article==null || article.isNew()) return false;
 
-        Log.d(TAG, "export " + article + "to " + outDir.toString());
+        Log.d(TAG, "export " + article + " to " + outDir.toString());
 
         String articleName = String.format("%s (%s)", article.getTitle(), article.getId());
         File outArticleDir = new File(outDir, articleName);
