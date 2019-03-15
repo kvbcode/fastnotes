@@ -1,11 +1,13 @@
 package com.cyber.fastnotes;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.cyber.component.AudioPlayerComponent;
 import com.cyber.component.AudioRecorderComponent;
@@ -27,6 +30,12 @@ import java.util.concurrent.TimeUnit;
 
 public class AudioRecorderActivity extends AppCompatActivity {
     private static String TAG = "REC_ACTIV";
+
+    private static final int INIT_PERMISSION_REQUEST = 3000;
+
+    private static final String[] RECORD_AUDIO_PERMISSION = {
+            Manifest.permission.RECORD_AUDIO,
+    };
 
     private AudioPlayerComponent comAudioPlayer;
     private AudioRecorderComponent comAudioRecorder;
@@ -51,14 +60,12 @@ public class AudioRecorderActivity extends AppCompatActivity {
         newContentUri = Uri.fromFile( IOHelper.createExternalFilePath( this, Environment.DIRECTORY_PODCASTS, "rec_", "m4a" ) );
 
         comAudioRecorder = findViewById(R.id.comAudioRecorder);
-        comAudioRecorder.setTargetFile( newContentUri.getPath() );
 
         mediaPlayer = new MediaPlayer();
         comAudioPlayer = findViewById(R.id.comAudioPlayer);
         comAudioPlayer.setMediaPlayer(mediaPlayer);
-        comAudioPlayer.setAudioSource(newContentUri);
-
         comAudioPlayer.setVisibility(View.INVISIBLE);
+
         comAudioRecorder.getStateObservable()
             .subscribe( state -> {
                 if ( state==AudioRecorderComponent.STATE_RECORDING_END ) {
@@ -79,6 +86,36 @@ public class AudioRecorderActivity extends AppCompatActivity {
         if (savedInstanceState==null) parseInputParams(getIntent());
 
         lockScreenOrientation(true);
+
+        if (!App.isPermissionsGranted(this, RECORD_AUDIO_PERMISSION) ) {
+            App.requestRuntimePermissions(this, RECORD_AUDIO_PERMISSION, INIT_PERMISSION_REQUEST);
+        }else {
+            initWithPermissions();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (!App.isRequestedPermissionsGranted(permissions, grantResults)){
+            Toast.makeText(this, R.string.status_denied, Toast.LENGTH_SHORT).show();
+
+            if (requestCode == INIT_PERMISSION_REQUEST) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        }else {
+            if (requestCode == INIT_PERMISSION_REQUEST) initWithPermissions();
+        }
+    }
+
+    protected void initWithPermissions(){
+        comAudioPlayer.setAudioSource(newContentUri);
+        comAudioRecorder.setTargetFile( newContentUri.getPath() );
+
+        if (!articleItem.isNew()) comAudioPlayer.setAudioSource( articleItem.getContentUri() );
+
     }
 
     protected void parseInputParams(Intent in){
@@ -91,7 +128,6 @@ public class AudioRecorderActivity extends AppCompatActivity {
             ParcelableArticleItemWrapper itemWrapper = in.getParcelableExtra( ArticleItem.class.getSimpleName() );
             articleItem = itemWrapper.getArticleItem();
             editTitle.setText( articleItem.getText() );
-            comAudioPlayer.setAudioSource( articleItem.getContentUri() );
             comAudioPlayer.setVisibility(View.VISIBLE);
             Log.v(TAG, "load ArticleItem from parcel: " + articleItem);
         }

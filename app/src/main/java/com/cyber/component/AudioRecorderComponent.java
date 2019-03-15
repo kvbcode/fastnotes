@@ -127,12 +127,22 @@ public class AudioRecorderComponent extends LinearLayout {
                 Log.v(TAG, "stop()");
                 setTrackInfoUpdateInterval(0L);
                 setState( STATE_RECORDING_END);
-                recorder.stop();
+                tryStopRecorder();
                 break;
             case STATE_RECORDING_END:
                 prepareRecorder( filePath );
                 onClick( view );
                 break;
+        }
+    }
+
+    public void tryStopRecorder(){
+        try{
+            recorder.stop();
+        }catch(RuntimeException e){
+            String text = "MediaRecorder.stop() error: " + e.getMessage();
+            Log.e(TAG, text);
+            Toast.makeText(getContext(), text, Toast.LENGTH_LONG).show();
         }
     }
 
