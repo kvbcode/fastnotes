@@ -128,15 +128,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void exportArticle(Article article){
-        boolean result = false;
         Log.v(App.TAG, "try export article");
         ArticleHtmlExport exporter = new ArticleHtmlExport(this);
         String dirDocuments = Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT ? "Document" : Environment.DIRECTORY_DOCUMENTS;
         File outDir = Environment.getExternalStoragePublicDirectory( dirDocuments );
-        result = exporter.export( article, outDir );
-        if (result){
-            Toast.makeText(this, "Экспорт завершен\nсохранено в " + outDir, Toast.LENGTH_LONG).show();
-        }
+
+        DB.articleDao().loadFully( article.getId() )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( ar -> {
+                if (exporter.export( ar, outDir ))
+                    Toast.makeText(this, "Экспорт завершен\nсохранено в " + outDir, Toast.LENGTH_LONG).show();
+            } );
     }
 
     @Override
