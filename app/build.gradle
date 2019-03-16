@@ -6,7 +6,7 @@ android {
         applicationId "com.cyber.fastnotes"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 1
+        versionCode 3
         versionName "1.1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -15,6 +15,9 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            def ver = defaultConfig.getVersionName()
+            setProperty("archivesBaseName", "fastnotes-v$ver")
         }
     }
     compileOptions {

@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 
 import com.cyber.component.AudioPlayerComponent;
 import com.cyber.fastnotes.App;
+import com.cyber.fastnotes.BuildConfig;
 import com.cyber.fastnotes.MakeNoteActivity;
 import com.cyber.fastnotes.R;
 import com.cyber.fastnotes.service.IOHelper;
@@ -204,6 +206,7 @@ public class ArticleView extends LinearLayout{
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(contentUri, "image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         context.startActivity(intent);
     }
 

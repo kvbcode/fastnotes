@@ -2,13 +2,16 @@ package com.cyber.fastnotes;
 
 import android.Manifest;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -60,6 +63,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     private ArticleView articleView;
     private ScrollView scrollView;
 
+    private Bundle savedInstanceState;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = item -> {
@@ -87,6 +91,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_note);
+        this.savedInstanceState = savedInstanceState;
 
         db = App.getInstance().getDataBase();
 
@@ -134,7 +139,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     }
 
     protected void initWithPermissions(){
-        parseInputParams(getIntent());
+        if (savedInstanceState==null) parseInputParams(getIntent());
     }
 
     @Override
@@ -226,13 +231,24 @@ public class MakeNoteActivity extends AppCompatActivity {
             return;
         }
 
-        Uri outputUri = Uri.fromFile( IOHelper.createExternalFilePath( this, Environment.DIRECTORY_PICTURES, "img_", "jpg" ) );
-        lastOutputFileUri = outputUri;
+        /*
+        https://developer.android.com/reference/android/os/FileUriExposedException.html
+        This is only thrown for applications targeting Build.VERSION_CODES#N or higher.
+        Applications targeting earlier SDK versions are allowed to share file:// Uri,
+        but it's strongly discouraged.
+        */
 
-        Log.d(App.TAG, "actionTakePhoto() into: " + outputUri);
+        lastOutputFileUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider",
+                IOHelper.createExternalFilePath(this, Environment.DIRECTORY_PICTURES, "img_", "jpg"));
 
-        Intent intent = new Intent( android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, lastOutputFileUri);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+        ClipData clip = ClipData.newUri(getContentResolver(), "photo", lastOutputFileUri);
+        intent.setClipData(clip);
+
+        Log.d(App.TAG, "actionTakePhoto() into: " + lastOutputFileUri);
 
         try {
             startActivityForResult(intent, PHOTO_REQUEST);
@@ -313,6 +329,7 @@ public class MakeNoteActivity extends AppCompatActivity {
     }
 
     public void addArticleItem(ArticleItem item){
+        Log.v(App.TAG, "add item: " + item);
         article.add(item);
         articleView.insertLastItemView();
         scrollView.postDelayed(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN), 1);
