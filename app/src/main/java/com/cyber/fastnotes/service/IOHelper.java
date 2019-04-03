@@ -38,6 +38,10 @@ public abstract class IOHelper {
         return new File(context.getExternalFilesDir(dirType), createFilename(filePrefix, fileExtension));
     }
 
+    public static boolean isApplicationStorageFilePath(Context context, String filePath){
+        return filePath.startsWith( context.getExternalFilesDir("").toString() );
+    }
+
     public static Bitmap loadBitmap(Context context, Uri contentUri, boolean useStubOnError){
         Bitmap image = null;
 
@@ -57,13 +61,17 @@ public abstract class IOHelper {
         return BitmapFactory.decodeResource(context.getResources(), IMAGE_ERROR);
     }
 
-    public static Bitmap getThumbnailFor(Context context, Uri contentUri, int width, int height, boolean useStubOnError){
-
-        Bitmap bitmap, thumbBitmap;
-
+    public static File getThumbnailFile(Context context, Uri contentUri){
         String fnHash = getHash(contentUri.toString());
         String thumbFileName = fnHash + ".jpg";
         File thumbFile = new File(context.getExternalCacheDir(), thumbFileName);
+
+        return thumbFile;
+    }
+
+    public static Bitmap getThumbnailFor(Context context, Uri contentUri, int width, int height, boolean useStubOnError){
+        Bitmap bitmap, thumbBitmap;
+        File thumbFile = getThumbnailFile(context, contentUri);
 
         // try to load saved thumbnail
 

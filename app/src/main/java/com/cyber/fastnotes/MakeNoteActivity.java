@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -23,7 +22,6 @@ import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.cyber.fastnotes.model.ParcelableArticleItemWrapper;
-import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.fastnotes.view.ArticleView;
 import com.cyber.fastnotes.model.Article;
@@ -31,10 +29,9 @@ import com.cyber.fastnotes.model.ArticleItem;
 import com.cyber.fastnotes.model.ParcelableArticleWrapper;
 import com.cyber.rx.ui.ObservableTextWatcher;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
 
 
 public class MakeNoteActivity extends AppCompatActivity {
@@ -55,7 +52,6 @@ public class MakeNoteActivity extends AppCompatActivity {
     };
 
     private Article article;
-    private AppDataBase db;
     private Uri lastOutputFileUri;
 
     private Menu toolbarMenu;
@@ -92,8 +88,6 @@ public class MakeNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_note);
         this.savedInstanceState = savedInstanceState;
-
-        db = App.getInstance().getDataBase();
 
         ObservableTextWatcher watcher = new ObservableTextWatcher();
         watcher.getOnChangedObservable()
@@ -157,11 +151,8 @@ public class MakeNoteActivity extends AppCompatActivity {
             setArticle( new Article() );
             setTitle(R.string.title_new_record);
         }else {
-            final long articleId = in.getLongExtra(App.PARAM_ID, Long.MIN_VALUE);
-            db.articleDao().loadFully(articleId)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(ar -> setArticle(ar));
-            setTitle(R.string.title_edit_record);
+            ParcelableArticleWrapper parc = in.getParcelableExtra( App.PARAM_ARTICLE );
+            setArticle(parc.getArticle());
 
             // suppress soft keyboard to open at start
             getWindow().setSoftInputMode( WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN );
@@ -211,14 +202,11 @@ public class MakeNoteActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.menuSave:
-                db.articleDao().saveFully( article )
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally(() -> finish())
-                    .subscribe( articleId -> {
-                        Intent data = new Intent();
-                        data.putExtra(App.PARAM_ID, articleId);
-                        setResult(RESULT_OK, data);
-                    });
+                Intent data = new Intent();
+                ParcelableArticleWrapper parc = new ParcelableArticleWrapper(article);
+                data.putExtra(App.PARAM_ARTICLE, parc);
+                setResult(RESULT_OK, data);
+                finish();
                 break;
         }
 
@@ -238,17 +226,19 @@ public class MakeNoteActivity extends AppCompatActivity {
         but it's strongly discouraged.
         */
 
-        lastOutputFileUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider",
-                IOHelper.createExternalFilePath(this, Environment.DIRECTORY_PICTURES, "img_", "jpg"));
+        File realFilePath = IOHelper.createExternalFilePath(this, Environment.DIRECTORY_PICTURES, "img_", "jpg");
+        lastOutputFileUri = Uri.fromFile(realFilePath);
+
+        Uri providedUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", realFilePath);
 
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, lastOutputFileUri);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, providedUri);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-        ClipData clip = ClipData.newUri(getContentResolver(), "photo", lastOutputFileUri);
+        ClipData clip = ClipData.newUri(getContentResolver(), "photo", providedUri);
         intent.setClipData(clip);
 
-        Log.d(App.TAG, "actionTakePhoto() into: " + lastOutputFileUri);
+        Log.d(App.TAG, "actionTakePhoto() into: '" + providedUri + "' ('" + lastOutputFileUri + "')");
 
         try {
             startActivityForResult(intent, PHOTO_REQUEST);
