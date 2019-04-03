@@ -21,6 +21,7 @@ public class App extends Application {
     public static final int DEBOUNCE_VALUE = 300;
     public static final String PARAM_LAST_OUTPUT_URI = "output_uri";
     public static final String PARAM_ARTICLE_ITEM = "article_item";
+    public static final String PARAM_ARTICLE = "article";
     public static final String PARAM_IS_NEW = "is_new";
     public static final String PARAM_ID = "id";
     public static final String TAG = "FASTNOTES";

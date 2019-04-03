@@ -17,8 +17,11 @@ import android.widget.Toast;
 
 import com.cyber.adapter.RowItemAdapter;
 import com.cyber.fastnotes.model.Article;
+import com.cyber.fastnotes.model.ArticleItem;
+import com.cyber.fastnotes.model.ParcelableArticleWrapper;
 import com.cyber.fastnotes.service.AppDataBase;
 import com.cyber.fastnotes.service.ArticleHtmlExport;
+import com.cyber.fastnotes.service.IOHelper;
 
 import java.io.File;
 
@@ -87,12 +90,16 @@ public class MainActivity extends AppCompatActivity {
 
     protected void actionEditArticle(long articleId, boolean isNew){
         Intent intent = new Intent(this, MakeNoteActivity.class);
-
         intent.putExtra(App.PARAM_IS_NEW, isNew);
+        if (isNew) startActivityForResult(intent, ARTICLE_REQUEST);
 
-        if (!isNew) intent.putExtra(App.PARAM_ID, articleId);
-
-        startActivityForResult(intent, ARTICLE_REQUEST);
+        DB.articleDao().loadFully( articleId )
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe( ar -> {
+                    ParcelableArticleWrapper parc = new ParcelableArticleWrapper(ar);
+                    intent.putExtra( App.PARAM_ARTICLE, parc );
+                    startActivityForResult(intent, ARTICLE_REQUEST);
+                });
     }
 
     protected void deleteArticleQuery(Article article){
@@ -101,21 +108,44 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage( article.getTitle() )
                 .setIcon(android.R.drawable.ic_delete)
                 .setCancelable(true)
-                .setPositiveButton(android.R.string.ok, (d, i) -> deleteArticle( article ) )
+                .setPositiveButton(android.R.string.ok, (d, i) -> deleteArticle( article.getId() ) )
                 .setNegativeButton(android.R.string.cancel, (d, i) -> d.cancel())
                 .show();
     }
 
-    protected void deleteArticle(Article article){
-        int pos = rowsAdapter.getIndexById( article.getId() );
-
-        Completable.fromAction( () -> DB.articleDao().delete( article ))
-            .subscribeOn(Schedulers.io())
+    protected void deleteArticle(Long articleId){
+        Log.v(App.TAG, "deleteArticle() id: " + articleId);
+        DB.articleDao().loadFully( articleId )
+            .doAfterSuccess( ar -> DB.articleDao().delete( ar ) )
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe( () -> {
+            .subscribe( ar -> {
+                int pos = rowsAdapter.getIndexById( ar.getId() );
                 rowsAdapter.remove( pos );
                 rowsAdapter.notifyItemRemoved( pos );
+                rowsAdapter.notifyDataSetChanged();
+                for(ArticleItem item:ar.getItems()) {
+                    deleteItemAttachment(item);
+                }
             });
+
+    }
+
+    protected void deleteItemAttachment(ArticleItem item){
+        if (ArticleItem.TYPE_IMAGE==item.getType() ||
+            ArticleItem.TYPE_AUDIO==item.getType()) {
+
+            if (IOHelper.isApplicationStorageFilePath( this, item.getContentUri().getPath() )){
+                File attFile = new File(item.getContentUri().getPath());
+                Log.v(App.TAG, "delete attachment: " + attFile);
+                attFile.delete();
+            }
+
+            if (ArticleItem.TYPE_IMAGE==item.getType()){
+                File thumbFile = IOHelper.getThumbnailFile(this, item.getContentUri());
+                Log.v(App.TAG, "delete thumbnail: " + thumbFile);
+                thumbFile.delete();
+            }
+        }
     }
 
     protected void showArticleMenu(Article article){
@@ -173,9 +203,21 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode==RESULT_CANCELED) return;
 
         if (requestCode== ARTICLE_REQUEST) {
-            long articleId = data.getLongExtra(App.PARAM_ID, Long.MIN_VALUE);
-            Log.v(App.TAG, "ARTICLE_REQUEST success, article id: " + articleId);
-            updateRowById(articleId);
+            ParcelableArticleWrapper parc = data.getParcelableExtra( App.PARAM_ARTICLE );
+
+            final Article resultArticle = parc.getArticle();
+
+            DB.articleDao().saveFully(resultArticle)
+                    .doAfterSuccess( id -> {
+                        for(ArticleItem item:resultArticle.getItems()){
+                            if (item.isDeleted()) deleteItemAttachment(item);
+                        }
+                    })
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(articleId -> {
+                        Log.v(App.TAG, "ARTICLE_REQUEST success, article id: " + articleId);
+                        updateRowById(articleId);
+                    });
         }
 
     }

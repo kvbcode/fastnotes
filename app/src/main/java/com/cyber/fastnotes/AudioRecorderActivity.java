@@ -26,6 +26,7 @@ import com.cyber.fastnotes.model.ParcelableArticleItemWrapper;
 import com.cyber.fastnotes.service.IOHelper;
 import com.cyber.rx.ui.ObservableTextWatcher;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public class AudioRecorderActivity extends AppCompatActivity {
@@ -147,6 +148,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
         switch(id) {
             case android.R.id.home:
                 setResult(RESULT_CANCELED);
+                onCancelActivity();
                 finish();
                 break;
             case R.id.menuSave:
@@ -158,6 +160,12 @@ public class AudioRecorderActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onCancelActivity(){
+        File newContentFile = new File(newContentUri.getPath());
+        Log.v(TAG, "onCancelFinish(), delete temp file: " + newContentFile);
+        newContentFile.delete();
     }
 
     public void lockScreenOrientation(boolean lock){

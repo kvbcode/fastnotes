@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -183,6 +184,7 @@ public class ArticleView extends LinearLayout{
     private View getBarcodeView(ArticleItem item) {
         TextView textView = new TextView(this.getContext());
         textView.setText(item.getText());
+        textView.setAutoLinkMask(Linkify.ALL);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18.0F);
         textView.setMovementMethod(LinkMovementMethod.getInstance());
 
